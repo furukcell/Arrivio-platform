@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState } from "react";
-import { createProvider, listProviders } from "@arrivio/firebase";
+import { createProvider, getAppUserByUid, listenToCurrentUser, listProviders, logoutCurrentUser } from "@arrivio/firebase";
 import type { Provider, ProviderType } from "@arrivio/shared";
 import {
   formatProviderCard,
@@ -36,10 +36,17 @@ const cardStyle = {
 export default function AdminProvidersPage() {
   const [form, setForm] = useState<ProviderFormState>(initialProviderFormState);
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [status, setStatus] = useState("Loading providers...");
+  const [status, setStatus] = useState("Checking admin session...");
   const [isSaving, setIsSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
 
   async function loadProviders() {
+    if (!isAdmin) {
+      setStatus("Admin login required.");
+      return;
+    }
+
     try {
       setStatus("Loading providers...");
       const items = await listProviders();
@@ -51,6 +58,11 @@ export default function AdminProvidersPage() {
   }
 
   async function saveProvider() {
+    if (!isAdmin) {
+      setStatus("Admin login required.");
+      return;
+    }
+
     const error = validateProviderForm(form);
     if (error) {
       setStatus(error);
@@ -81,21 +93,56 @@ export default function AdminProvidersPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  async function logoutAdmin() {
+    await logoutCurrentUser();
+    setIsAdmin(false);
+    setAuthEmail("");
+    setProviders([]);
+    setStatus("Logged out.");
+  }
+
   useEffect(() => {
-    loadProviders();
+    const unsubscribe = listenToCurrentUser(async (authUser) => {
+      if (!authUser) {
+        setIsAdmin(false);
+        setStatus("Please login as admin at /login.");
+        return;
+      }
+
+      setAuthEmail(authUser.email || "");
+      const profile = await getAppUserByUid(authUser.uid);
+      const allowed = profile?.role === "admin";
+      setIsAdmin(allowed);
+      if (!allowed) {
+        setStatus("This account is not an admin account.");
+        return;
+      }
+
+      setStatus("Admin session ready.");
+      const items = await listProviders();
+      setProviders(items);
+      setStatus(items.length ? "" : "No providers yet.");
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return createElement(
     "main",
     { style: pageStyle },
     createElement("h1", { style: { fontSize: "40px", margin: "0 0 8px" } }, "Providers"),
-    createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "Create and list service providers for Arrivio operations."),
-    createElement("section", { style: { ...cardStyle, maxWidth: "720px" } },
+    createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, "Admin-only provider management screen."),
+    createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, `Admin: ${authEmail || "not logged in"}`),
+    createElement("button", { type: "button", onClick: logoutAdmin, style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#4B5563", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", marginBottom: "18px" } }, "Logout"),
+    status ? createElement("p", { style: { fontWeight: 700 } }, status) : null,
+    !isAdmin ? createElement("p", null, "Open /login to sign in as admin.") : null,
+    createElement("section", { style: { ...cardStyle, maxWidth: "720px", opacity: isAdmin ? 1 : 0.55 } },
       createElement("h2", { style: { marginTop: 0 } }, "Create Provider"),
       createElement("label", null, "Type"),
       createElement("select", {
         style: inputStyle,
         value: form.type,
+        disabled: !isAdmin,
         onChange: (event) => updateField("type", event.currentTarget.value as ProviderType)
       },
         createElement("option", { value: "transfer" }, "Transfer"),
@@ -104,23 +151,22 @@ export default function AdminProvidersPage() {
         createElement("option", { value: "agency" }, "Agency")
       ),
       createElement("label", null, "Name"),
-      createElement("input", { style: inputStyle, value: form.name, onChange: (event) => updateField("name", event.currentTarget.value), placeholder: "Provider name" }),
+      createElement("input", { style: inputStyle, disabled: !isAdmin, value: form.name, onChange: (event) => updateField("name", event.currentTarget.value), placeholder: "Provider name" }),
       createElement("label", null, "Phone"),
-      createElement("input", { style: inputStyle, value: form.phone, onChange: (event) => updateField("phone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" }),
+      createElement("input", { style: inputStyle, disabled: !isAdmin, value: form.phone, onChange: (event) => updateField("phone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" }),
       createElement("label", null, "WhatsApp"),
-      createElement("input", { style: inputStyle, value: form.whatsapp, onChange: (event) => updateField("whatsapp", event.currentTarget.value), placeholder: "Optional" }),
+      createElement("input", { style: inputStyle, disabled: !isAdmin, value: form.whatsapp, onChange: (event) => updateField("whatsapp", event.currentTarget.value), placeholder: "Optional" }),
       createElement("label", null, "Email"),
-      createElement("input", { style: inputStyle, value: form.email, onChange: (event) => updateField("email", event.currentTarget.value), placeholder: "Optional" }),
+      createElement("input", { style: inputStyle, disabled: !isAdmin, value: form.email, onChange: (event) => updateField("email", event.currentTarget.value), placeholder: "Optional" }),
       createElement("label", null, "Notes"),
-      createElement("input", { style: inputStyle, value: form.notes, onChange: (event) => updateField("notes", event.currentTarget.value), placeholder: "Optional" }),
+      createElement("input", { style: inputStyle, disabled: !isAdmin, value: form.notes, onChange: (event) => updateField("notes", event.currentTarget.value), placeholder: "Optional" }),
       createElement("button", {
         type: "button",
         onClick: saveProvider,
-        disabled: isSaving,
+        disabled: isSaving || !isAdmin,
         style: { padding: "13px 18px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer" }
       }, isSaving ? "Saving..." : "Create Provider")
     ),
-    status ? createElement("p", { style: { fontWeight: 700 } }, status) : null,
     createElement("h2", null, "Existing Providers"),
     ...providers.map((provider) =>
       createElement("article", { key: provider.id || provider.name, style: cardStyle },
