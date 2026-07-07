@@ -31,11 +31,11 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 17 | Done / Partial | Transfer, rent a car ve otel detay ekranları eklendi. |
 | Step 18 | Done / Partial | Ana sayfada TR/EN başlangıcı ve formlarda WhatsApp destek eklendi. |
 | Step 19 | Done / MVP | Provider WhatsApp, fiyat/not ve aktif/tamamlanan iş ayrımı eklendi. |
-| Step 20 | Done / MVP | Web formları TR/EN metin, hata ve başarı mesajlarıyla genişletildi. |
+| Step 20 | Done / MVP | Web formları merkezi `webCopy.ts` üzerinden tam TR/EN metin, hata, başarı ve talep kodu mesajlarıyla genişletildi. |
 | Step 21 | Next | Firebase canlı kurulum, env, users, rules ve build/typecheck. |
 | Step 22 | Pending | Mobil MVP. |
 
-Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/EN destekli çalışır; transfer, rent a car, otel ve bilet talebi toplanabilir; admin panel talepleri yönetir; provider kendi işlerinde müşteriye WhatsApp'tan geçebilir ve fiyat/not girebilir.
+Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/EN destekli çalışır; Türkçe karakterli metinler merkezi `apps/web/src/webCopy.ts` dosyasından yönetilir; transfer, rent a car, otel ve bilet talebi toplanabilir; admin panel talepleri yönetir; provider kendi işlerinde müşteriye WhatsApp'tan geçebilir ve fiyat/not girebilir.
 
 ---
 
@@ -105,7 +105,15 @@ arrivio-platform/
 - `/car-rental?lang=tr` veya `/car-rental?lang=en` araç kiralama talebi toplar.
 - `/hotel?lang=tr` veya `/hotel?lang=en` otel uygunluk talebi toplar.
 - `/ticket?lang=tr` veya `/ticket?lang=en` bilet talebi toplar.
-- `/qr/[slug]` QR source event kaydeder ve yolcuyu talep akışına taşır.
+- `/qr/[slug]?lang=tr` veya `/qr/[slug]?lang=en` QR source event kaydeder ve seçili dili transfer formuna taşır.
+
+### Web Dil Sistemi
+
+- `apps/web/src/webCopy.ts` dosyası Türkçe/İngilizce görünür metinlerin merkezidir.
+- `apps/web/src/supportModel.ts` dosyası `getLanguage()`, WhatsApp destek linki ve validasyon mesajı çeviri helperlarını içerir.
+- Formlar `?lang=tr` veya `?lang=en` değerini okur.
+- Form gönderildiğinde Firestore payload içindeki `language` alanı seçili dile göre yazılır.
+- QR landing sayfası `lang` bilgisini `/transfer` formuna taşır.
 
 ### Admin
 
