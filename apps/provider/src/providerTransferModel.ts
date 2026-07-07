@@ -22,3 +22,21 @@ export function formatContactLine(request: TransferRequest): string {
 export function isProviderActionable(request: TransferRequest): boolean {
   return request.status === "provider_pending" || request.status === "confirmed" || request.status === "passenger_waiting";
 }
+
+export function isCompletedTransfer(request: TransferRequest): boolean {
+  return request.status === "completed" || request.status === "cancelled" || request.status === "no_show";
+}
+
+export function isActiveTransfer(request: TransferRequest): boolean {
+  return !isCompletedTransfer(request);
+}
+
+export function normalizePhoneForWhatsapp(phone: string): string {
+  return phone.replace(/[^0-9]/g, "");
+}
+
+export function buildPassengerWhatsappUrl(request: TransferRequest): string {
+  const phone = normalizePhoneForWhatsapp(request.passengerPhone);
+  const message = encodeURIComponent(`Hello, this is Arrivio transfer provider for request ${request.requestCode}.`);
+  return `https://wa.me/${phone}?text=${message}`;
+}
