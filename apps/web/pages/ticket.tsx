@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { createTicketRequest } from "@arrivio/firebase";
 import { createTicketRequestCode, initialTicketFormState, validateTicketForm, type TicketFormState } from "../src/ticketFormModel";
 import { mapTicketFormToRequest } from "../src/ticketRequestMapper";
-import { getLanguage, whatsappSupportUrl } from "../src/supportModel";
+import { copy, getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
 
 const pageStyle = { minHeight: "100vh", padding: "24px", fontFamily: "Arial, sans-serif", background: "#F7FBFF", color: "#08183A" };
 const cardStyle = { maxWidth: "720px", margin: "0 auto", padding: "24px", borderRadius: "24px", background: "#FFFFFF", boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)" };
@@ -32,7 +32,7 @@ export default function TicketPage() {
   async function submitRequest() {
     const error = validateTicketForm(form);
     if (error) {
-      setStatus(error);
+      setStatus(translateFormMessage(language, error));
       return;
     }
     setIsSubmitting(true);
@@ -40,9 +40,9 @@ export default function TicketPage() {
       const code = createTicketRequestCode();
       await createTicketRequest(mapTicketFormToRequest(form, code, qrSourceId || undefined));
       setRequestCode(code);
-      setStatus("Ticket request created. Arrivio will contact you soon.");
+      setStatus(copy(language, "Talebiniz alindi. Arrivio size ulasacak.", "Ticket request created. Arrivio will contact you soon."));
     } catch (error) {
-      setStatus("Ticket request could not be created. Please try again.");
+      setStatus(copy(language, "Talep olusturulamadi. Lutfen tekrar deneyin.", "Ticket request could not be created. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -50,28 +50,29 @@ export default function TicketPage() {
 
   return createElement("main", { style: pageStyle },
     createElement("section", { style: cardStyle },
-      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Arrivio Ticket Request"),
-      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, "Request Flight Ticket"),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "18px" } }, "Send your route and date. Arrivio will forward your request to an authorized agency."),
-      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700 } }, "QR source detected.") : null,
-      createElement("label", null, "Passenger name"),
-      createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: "Full name" }),
-      createElement("label", null, "Phone / WhatsApp"),
+      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, copy(language, "Ana sayfa", "Home")),
+      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Arrivio"),
+      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, copy(language, "Bilet Talebi", "Request Ticket")),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "18px" } }, copy(language, "Rota ve tarih bilgilerinizi gonderin.", "Send your route and date.")),
+      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700 } }, copy(language, "QR kaynagi algilandi.", "QR source detected.")) : null,
+      createElement("label", null, copy(language, "Yolcu adi", "Passenger name")),
+      createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: copy(language, "Ad soyad", "Full name") }),
+      createElement("label", null, copy(language, "Telefon / WhatsApp", "Phone / WhatsApp")),
       createElement("input", { style: inputStyle, value: form.passengerPhone, onChange: (event) => updateField("passengerPhone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" }),
-      createElement("label", null, "From"),
+      createElement("label", null, copy(language, "Nereden", "From")),
       createElement("input", { style: inputStyle, value: form.fromAirportOrCity, onChange: (event) => updateField("fromAirportOrCity", event.currentTarget.value), placeholder: "Bodrum / BJV" }),
-      createElement("label", null, "To"),
-      createElement("input", { style: inputStyle, value: form.toAirportOrCity, onChange: (event) => updateField("toAirportOrCity", event.currentTarget.value), placeholder: "Istanbul, Ankara, London..." }),
-      createElement("label", null, "Departure date"),
+      createElement("label", null, copy(language, "Nereye", "To")),
+      createElement("input", { style: inputStyle, value: form.toAirportOrCity, onChange: (event) => updateField("toAirportOrCity", event.currentTarget.value), placeholder: "Istanbul, Ankara..." }),
+      createElement("label", null, copy(language, "Gidis tarihi", "Departure date")),
       createElement("input", { style: inputStyle, type: "date", value: form.departureDate, onChange: (event) => updateField("departureDate", event.currentTarget.value) }),
-      createElement("label", null, "Return date"),
+      createElement("label", null, copy(language, "Donus tarihi", "Return date")),
       createElement("input", { style: inputStyle, type: "date", value: form.returnDate, onChange: (event) => updateField("returnDate", event.currentTarget.value) }),
-      createElement("label", null, "Passengers"),
+      createElement("label", null, copy(language, "Yolcu sayisi", "Passengers")),
       createElement("input", { style: inputStyle, type: "number", min: 1, value: form.passengers, onChange: (event) => updateField("passengers", Number(event.currentTarget.value)) }),
-      createElement("button", { style: buttonStyle, type: "button", onClick: submitRequest, disabled: isSubmitting }, isSubmitting ? "Sending..." : "Request Ticket"),
-      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, "WhatsApp Support"),
+      createElement("button", { style: buttonStyle, type: "button", onClick: submitRequest, disabled: isSubmitting }, isSubmitting ? copy(language, "Gonderiliyor...", "Sending...") : copy(language, "Bilet Talebi Gonder", "Request Ticket")),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, copy(language, "WhatsApp Destek", "WhatsApp Support")),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
-      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `Request code: ${requestCode}`) : null
+      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${copy(language, "Talep kodu", "Request code")}: ${requestCode}`) : null
     )
   );
 }
