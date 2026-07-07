@@ -1,10 +1,12 @@
 import { createElement, useEffect, useState } from "react";
-import { getAppUserByUid, listenToCurrentUser, listHotelRequests, logoutCurrentUser } from "@arrivio/firebase";
-import type { HotelRequest } from "@arrivio/shared";
+import { getAppUserByUid, listenToCurrentUser, listHotelRequests, logoutCurrentUser, updateHotelStatus } from "@arrivio/firebase";
+import type { HotelRequest, HotelStatus } from "@arrivio/shared";
 
 const pageStyle = { minHeight: "100vh", padding: "32px", fontFamily: "Arial, sans-serif", background: "#F8FAFC", color: "#08183A" };
 const cardStyle = { padding: "20px", borderRadius: "18px", background: "#FFFFFF", border: "1px solid #E5E7EB", marginBottom: "14px" };
 const buttonStyle = { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", marginRight: "8px" };
+const selectStyle = { width: "100%", padding: "12px", marginTop: "10px", marginBottom: "10px", border: "1px solid #D1D5DB", borderRadius: "12px" };
+const statusOptions: HotelStatus[] = ["new", "hotel_pending", "price_sent", "passenger_accepted", "completed", "cancelled"];
 
 function title(request: HotelRequest): string {
   return `${request.requestCode} - ${request.passengerName}`;
@@ -26,13 +28,14 @@ export default function AdminHotelPage() {
   const [status, setStatus] = useState("Checking admin session...");
   const [isAdmin, setIsAdmin] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
+  const [nextStatuses, setNextStatuses] = useState<Record<string, HotelStatus>>({});
+  const [savingId, setSavingId] = useState("");
 
   async function loadData() {
     if (!isAdmin) {
       setStatus("Admin login required.");
       return;
     }
-
     try {
       setStatus("Loading hotel requests...");
       const items = await listHotelRequests(50);
@@ -40,6 +43,20 @@ export default function AdminHotelPage() {
       setStatus(items.length ? "" : "No hotel requests yet.");
     } catch (error) {
       setStatus("Hotel requests could not be loaded.");
+    }
+  }
+
+  async function saveRequestStatus(request: HotelRequest) {
+    if (!isAdmin || !request.id) return;
+    setSavingId(request.id);
+    try {
+      await updateHotelStatus({ requestId: request.id, status: nextStatuses[request.id] || request.status });
+      await loadData();
+      setStatus(`Status saved for ${request.requestCode}.`);
+    } catch (error) {
+      setStatus("Hotel status could not be saved.");
+    } finally {
+      setSavingId("");
     }
   }
 
@@ -58,7 +75,6 @@ export default function AdminHotelPage() {
         setStatus("Please login as admin at /login.");
         return;
       }
-
       setAuthEmail(authUser.email || "");
       const profile = await getAppUserByUid(authUser.uid);
       const allowed = profile?.role === "admin";
@@ -67,13 +83,10 @@ export default function AdminHotelPage() {
         setStatus("This account is not an admin account.");
         return;
       }
-
-      setStatus("Admin session ready.");
       const items = await listHotelRequests(50);
       setRequests(items);
       setStatus(items.length ? "" : "No hotel requests yet.");
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -91,7 +104,13 @@ export default function AdminHotelPage() {
       createElement("p", { style: { margin: "0 0 6px", color: "#4B5563" } }, meta(request)),
       createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Flight: ${request.flightCode || "not set"}`),
-      createElement("p", { style: { margin: 0 } }, `Status: ${request.status}`)
+      createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
+      request.id ? createElement("div", null,
+        createElement("select", { style: selectStyle, value: nextStatuses[request.id] || request.status, onChange: (event) => setNextStatuses((current) => ({ ...current, [request.id || ""]: event.currentTarget.value as HotelStatus })) },
+          ...statusOptions.map((item) => createElement("option", { key: item, value: item }, item))
+        ),
+        createElement("button", { type: "button", onClick: () => saveRequestStatus(request), disabled: !isAdmin || savingId === request.id, style: buttonStyle }, savingId === request.id ? "Saving..." : "Save Status")
+      ) : null
     ))
   );
 }
