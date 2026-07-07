@@ -1,5 +1,4 @@
 import { createElement, useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import {
   getAppUserByUid,
   listenToCurrentUser,
@@ -12,7 +11,6 @@ import {
   formatContactLine,
   formatPassengerSummary,
   formatTransferTitle,
-  getProviderIdFromQuery,
   isProviderActionable
 } from "../src/providerTransferModel";
 import { buildProviderSessionStatus, resolveProviderId } from "../src/providerSessionModel";
@@ -51,8 +49,6 @@ const secondaryButton = {
 };
 
 export default function ProviderTransfersPage() {
-  const router = useRouter();
-  const fallbackProviderId = getProviderIdFromQuery(router.query.providerId);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [authEmail, setAuthEmail] = useState("");
   const [providerId, setProviderId] = useState("");
@@ -63,7 +59,7 @@ export default function ProviderTransfersPage() {
 
   async function loadTransfers(activeProviderId = providerId) {
     if (!activeProviderId) {
-      setStatus("Provider id is missing. Login or use temporary providerId query for local MVP test.");
+      setStatus("Provider login required. Open /login and sign in as provider.");
       return;
     }
 
@@ -78,6 +74,11 @@ export default function ProviderTransfersPage() {
   }
 
   async function setTransferStatus(request: TransferRequest, nextStatus: TransferStatus) {
+    if (!providerId) {
+      setStatus("Provider login required.");
+      return;
+    }
+
     if (!request.id) {
       setStatus("Request id is missing.");
       return;
@@ -108,9 +109,9 @@ export default function ProviderTransfersPage() {
     const unsubscribe = listenToCurrentUser(async (authUser) => {
       if (!authUser) {
         setIsSessionReady(true);
-        setProviderId(fallbackProviderId);
-        setStatus(fallbackProviderId ? "Using temporary providerId query fallback." : "Please login as provider.");
-        if (fallbackProviderId) await loadTransfers(fallbackProviderId);
+        setProviderId("");
+        setRequests([]);
+        setStatus("Please login as provider at /login.");
         return;
       }
 
@@ -125,16 +126,16 @@ export default function ProviderTransfersPage() {
     });
 
     return () => unsubscribe();
-  }, [fallbackProviderId]);
+  }, []);
 
   return createElement(
     "main",
     { style: pageStyle },
     createElement("h1", { style: { fontSize: "40px", margin: "0 0 8px" } }, "Provider Transfers"),
-    createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, "ProviderId is now resolved from Firebase Auth profile. Query providerId is only a temporary MVP fallback."),
+    createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, "ProviderId is resolved only from Firebase Auth profile."),
     createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, `Email: ${authEmail || "not logged in"}`),
     createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, `Provider ID: ${providerId || "not set"}`),
-    createElement("button", { type: "button", onClick: () => loadTransfers(), disabled: !isSessionReady, style: primaryButton }, "Refresh"),
+    createElement("button", { type: "button", onClick: () => loadTransfers(), disabled: !isSessionReady || !providerId, style: primaryButton }, "Refresh"),
     createElement("button", { type: "button", onClick: logoutProvider, style: { ...primaryButton, background: "#4B5563" } }, "Logout"),
     status ? createElement("p", { style: { fontWeight: 700 } }, status) : null,
     !authEmail ? createElement("p", null, "Open /login to sign in as provider.") : null,
@@ -146,11 +147,11 @@ export default function ProviderTransfersPage() {
         createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
         createElement("p", { style: { margin: "0 0 12px" } }, `Provider: ${request.providerName || request.assignedProviderId || "Assigned"}`),
         isProviderActionable(request) ? createElement("div", null,
-          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "confirmed"), disabled: updatingId === request.id, style: secondaryButton }, "Accept / Confirm"),
-          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "passenger_waiting"), disabled: updatingId === request.id, style: primaryButton }, "Passenger Waiting"),
-          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "passenger_picked_up"), disabled: updatingId === request.id, style: primaryButton }, "Picked Up"),
-          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "completed"), disabled: updatingId === request.id, style: secondaryButton }, "Completed"),
-          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "cancelled"), disabled: updatingId === request.id, style: { ...primaryButton, background: "#EF4444" } }, "Cancel")
+          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "confirmed"), disabled: updatingId === request.id || !providerId, style: secondaryButton }, "Accept / Confirm"),
+          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "passenger_waiting"), disabled: updatingId === request.id || !providerId, style: primaryButton }, "Passenger Waiting"),
+          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "passenger_picked_up"), disabled: updatingId === request.id || !providerId, style: primaryButton }, "Picked Up"),
+          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "completed"), disabled: updatingId === request.id || !providerId, style: secondaryButton }, "Completed"),
+          createElement("button", { type: "button", onClick: () => setTransferStatus(request, "cancelled"), disabled: updatingId === request.id || !providerId, style: { ...primaryButton, background: "#EF4444" } }, "Cancel")
         ) : null
       )
     )
