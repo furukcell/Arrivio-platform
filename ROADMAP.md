@@ -12,6 +12,7 @@
 - [ ] Firebase projesini aç (Arrivio Production veya Arrivio MVP)
 - [ ] Firestore, Auth, Storage servislerini aktif et
 - [ ] `packages/shared` içine ana koleksiyon isimlerini ve status sabitlerini ekle
+- [ ] Sağlayıcı login kararı netleştir: MVP'de sağlayıcı Firebase Auth ile mi girecek, yoksa admin sağlayıcı adına mı yönetecek (bkz. README → Roller ve Kimlik Doğrulama)
 - [ ] Domain adayı kontrolü (arrivio.com.tr / arrivio.app / arrivio.travel)
 - [ ] Sosyal medya kullanıcı adı kontrolü
 - [ ] Acenteci arkadaşla komisyon konuşmasına başla
