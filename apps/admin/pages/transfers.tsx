@@ -1,6 +1,6 @@
 import { createElement, useEffect, useState } from "react";
-import { listTransferRequests } from "@arrivio/firebase";
-import type { TransferRequest } from "@arrivio/shared";
+import { assignTransferProvider, filterTransferProviders, listProviders, listTransferRequests } from "@arrivio/firebase";
+import type { Provider, TransferRequest } from "@arrivio/shared";
 import {
   formatProviderInfo,
   formatTransferMeta,
@@ -24,23 +24,71 @@ const cardStyle = {
   marginBottom: "14px"
 };
 
+const selectStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "10px",
+  marginBottom: "10px",
+  border: "1px solid #D1D5DB",
+  borderRadius: "12px"
+};
+
 export default function AdminTransferRequestsPage() {
   const [requests, setRequests] = useState<TransferRequest[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("Loading transfer requests...");
+  const [assigningId, setAssigningId] = useState<string>("");
 
-  async function loadTransfers() {
+  async function loadData() {
     try {
       setStatus("Loading transfer requests...");
-      const items = await listTransferRequests(50);
-      setRequests(items);
-      setStatus(items.length ? "" : "No transfer requests yet.");
+      const transferItems = await listTransferRequests(50);
+      const providerItems = filterTransferProviders(await listProviders());
+      setRequests(transferItems);
+      setProviders(providerItems);
+      setStatus(transferItems.length ? "" : "No transfer requests yet.");
     } catch (error) {
       setStatus("Transfer requests could not be loaded.");
     }
   }
 
+  async function assignProvider(request: TransferRequest) {
+    if (!request.id) {
+      setStatus("Request id is missing.");
+      return;
+    }
+
+    const selectedProviderId = selectedProviders[request.id];
+    const provider = providers.find((item) => item.id === selectedProviderId);
+
+    if (!provider?.id) {
+      setStatus("Please select a transfer provider first.");
+      return;
+    }
+
+    setAssigningId(request.id);
+    try {
+      await assignTransferProvider({
+        requestId: request.id,
+        providerId: provider.id,
+        providerName: provider.name
+      });
+      await loadData();
+      setStatus(`Request ${request.requestCode} assigned to ${provider.name}.`);
+    } catch (error) {
+      setStatus("Transfer request could not be assigned.");
+    } finally {
+      setAssigningId("");
+    }
+  }
+
+  function selectProvider(requestId: string, providerId: string) {
+    setSelectedProviders((current) => ({ ...current, [requestId]: providerId }));
+  }
+
   useEffect(() => {
-    loadTransfers();
+    loadData();
   }, []);
 
   return createElement(
@@ -52,7 +100,7 @@ export default function AdminTransferRequestsPage() {
       "button",
       {
         type: "button",
-        onClick: loadTransfers,
+        onClick: loadData,
         style: {
           padding: "12px 16px",
           border: 0,
@@ -76,7 +124,21 @@ export default function AdminTransferRequestsPage() {
         createElement("p", { style: { margin: "0 0 6px", color: "#4B5563" } }, formatTransferMeta(request)),
         createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
         createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
-        createElement("p", { style: { margin: 0 } }, `Provider: ${formatProviderInfo(request)}`)
+        createElement("p", { style: { margin: "0 0 8px" } }, `Provider: ${formatProviderInfo(request)}`),
+        createElement("select", {
+          style: selectStyle,
+          value: request.id ? selectedProviders[request.id] || "" : "",
+          onChange: (event) => request.id && selectProvider(request.id, event.currentTarget.value)
+        },
+          createElement("option", { value: "" }, "Select transfer provider"),
+          ...providers.map((provider) => createElement("option", { key: provider.id || provider.name, value: provider.id }, provider.name))
+        ),
+        createElement("button", {
+          type: "button",
+          onClick: () => assignProvider(request),
+          disabled: assigningId === request.id,
+          style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer" }
+        }, assigningId === request.id ? "Assigning..." : "Assign Provider")
       )
     )
   );
