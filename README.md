@@ -31,9 +31,11 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 17 | Done / Partial | Transfer, rent a car ve otel detay ekranları eklendi. |
 | Step 18 | Done / Partial | Ana sayfada TR/EN başlangıcı ve formlarda WhatsApp destek eklendi. |
 | Step 19 | Done / MVP | Provider WhatsApp, fiyat/not ve aktif/tamamlanan iş ayrımı eklendi. |
-| Step 20 | Next | Mobil MVP. |
+| Step 20 | Done / MVP | Web formları TR/EN metin, hata ve başarı mesajlarıyla genişletildi. |
+| Step 21 | Next | Firebase canlı kurulum, env, users, rules ve build/typecheck. |
+| Step 22 | Pending | Mobil MVP. |
 
-Mobilden önceki web/admin/provider MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor, provider kendi işlerinde müşteriye WhatsApp'tan geçebiliyor ve fiyat/not girebiliyor.
+Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/EN destekli çalışır; transfer, rent a car, otel ve bilet talebi toplanabilir; admin panel talepleri yönetir; provider kendi işlerinde müşteriye WhatsApp'tan geçebilir ve fiyat/not girebilir.
 
 ---
 
@@ -78,6 +80,7 @@ arrivio-platform/
     step-17-request-detail-screens.md
     step-18-web-language-support.md
     step-19-provider-panel-strengthening.md
+    step-20-full-web-language-cleanup.md
   README.md
   ROADMAP.md
 ```
@@ -97,11 +100,11 @@ arrivio-platform/
 /qr/[slug]
 ```
 
-- `/` ana sayfada servis aksiyonları, TR/EN başlangıç linkleri ve WhatsApp destek vardır.
-- `/transfer` yolcu transfer talebi toplar ve WhatsApp destek gösterir.
-- `/car-rental` yolcu araç kiralama talebi toplar ve WhatsApp destek gösterir.
-- `/hotel` yolcu otel uygunluk talebi toplar ve WhatsApp destek gösterir.
-- `/ticket` yolcu bilet talebi toplar ve WhatsApp destek gösterir.
+- `/` ana sayfada servis aksiyonları, TR/EN linkleri ve WhatsApp destek vardır.
+- `/transfer?lang=tr` veya `/transfer?lang=en` yolcu transfer talebi toplar.
+- `/car-rental?lang=tr` veya `/car-rental?lang=en` araç kiralama talebi toplar.
+- `/hotel?lang=tr` veya `/hotel?lang=en` otel uygunluk talebi toplar.
+- `/ticket?lang=tr` veya `/ticket?lang=en` bilet talebi toplar.
 - `/qr/[slug]` QR source event kaydeder ve yolcuyu talep akışına taşır.
 
 ### Admin
@@ -197,6 +200,7 @@ displayName?: string
 7. Provider Panel
 8. Admin Komisyon Takibi
 9. WhatsApp Destek Linki
+10. TR/EN Web Dil Desteği
 
 ---
 
@@ -220,6 +224,8 @@ displayName?: string
 16. Talep detay ekranı ve operasyon notları. Done / Partial
 17. Web TR/EN + WhatsApp destek. Done / Partial
 18. Provider panel güçlendirme. Done / MVP
-19. Mobil uygulama. Next
+19. Full web TR/EN language cleanup. Done / MVP
+20. Firebase canlı kurulum + build/typecheck. Next
+21. Mobil uygulama. Pending
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
