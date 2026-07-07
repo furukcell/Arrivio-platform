@@ -30,6 +30,31 @@ service cloud.firestore {
       return appUser().providerId;
     }
 
+    function isAssignedProvider() {
+      return isProvider() && resource.data.assignedProviderId == providerId();
+    }
+
+    function providerStatusAllowed() {
+      return request.resource.data.status in ["confirmed", "passenger_waiting", "passenger_picked_up", "completed", "cancelled"];
+    }
+
+    function providerTransferUpdateOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "providerNote", "updatedAt"]);
+    }
+
+    function publicTransferCreateAllowed() {
+      return request.resource.data.type == "transfer"
+        && request.resource.data.status == "new"
+        && request.resource.data.commissionStatus == "pending"
+        && request.resource.data.requestCode is string
+        && request.resource.data.passengerName is string
+        && request.resource.data.passengerPhone is string
+        && request.resource.data.destination is string
+        && request.resource.data.passengers is int
+        && request.resource.data.passengers >= 1
+        && !request.resource.data.keys().hasAny(["assignedProviderId", "providerName", "providerNote", "adminNote", "estimatedTotalPrice", "commissionAmount"]);
+    }
+
     match /users/{userId} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
       allow create, update, delete: if isAdmin();
@@ -41,9 +66,9 @@ service cloud.firestore {
     }
 
     match /transferRequests/{requestId} {
-      allow create: if true;
-      allow read: if isAdmin() || (isProvider() && resource.data.assignedProviderId == providerId());
-      allow update: if isAdmin() || (isProvider() && resource.data.assignedProviderId == providerId());
+      allow create: if publicTransferCreateAllowed() || isAdmin();
+      allow read: if isAdmin() || isAssignedProvider();
+      allow update: if isAdmin() || (isAssignedProvider() && providerTransferUpdateOnly() && providerStatusAllowed());
       allow delete: if isAdmin();
     }
 
