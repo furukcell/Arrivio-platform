@@ -8,10 +8,11 @@ import {
   type TransferFormState
 } from "../src/transferFormModel";
 import { mapTransferFormToRequest } from "../src/transferRequestMapper";
+import { getLanguage, whatsappSupportUrl } from "../src/supportModel";
 
 const pageStyle = {
   minHeight: "100vh",
-  padding: "32px",
+  padding: "24px",
   fontFamily: "Arial, sans-serif",
   background: "#F7FBFF",
   color: "#08183A"
@@ -20,7 +21,7 @@ const pageStyle = {
 const cardStyle = {
   maxWidth: "720px",
   margin: "0 auto",
-  padding: "28px",
+  padding: "24px",
   borderRadius: "24px",
   background: "#FFFFFF",
   boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)"
@@ -48,6 +49,20 @@ const buttonStyle = {
   cursor: "pointer"
 };
 
+const supportStyle = {
+  display: "block",
+  width: "100%",
+  boxSizing: "border-box" as const,
+  textAlign: "center" as const,
+  padding: "15px",
+  borderRadius: "999px",
+  background: "#1FB6A6",
+  color: "#FFFFFF",
+  fontWeight: 700,
+  textDecoration: "none",
+  marginTop: "12px"
+};
+
 function getQueryValue(rawValue: string | string[] | undefined): string {
   if (Array.isArray(rawValue)) return rawValue[0] || "";
   return rawValue || "";
@@ -55,6 +70,7 @@ function getQueryValue(rawValue: string | string[] | undefined): string {
 
 export default function TransferPage() {
   const router = useRouter();
+  const language = getLanguage(router.query.lang);
   const qrSourceId = getQueryValue(router.query.qrSourceId);
   const [form, setForm] = useState<TransferFormState>(initialTransferFormState);
   const [status, setStatus] = useState<string>("");
@@ -140,11 +156,8 @@ export default function TransferPage() {
         value: form.bags,
         onChange: (event) => updateField("bags", Number(event.currentTarget.value))
       }),
-      createElement(
-        "button",
-        { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting },
-        isSubmitting ? "Sending..." : "Request Transfer"
-      ),
+      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? "Sending..." : "Request Transfer"),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, "WhatsApp Support"),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
       requestCode ? createElement("p", { style: { marginTop: "8px" } }, `Request code: ${requestCode}`) : null
     )
