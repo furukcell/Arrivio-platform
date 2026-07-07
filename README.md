@@ -8,6 +8,21 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 
 ---
 
+## Güncel MVP Durumu
+
+| Step | Durum | Repo karşılığı |
+|---|---|---|
+| Step 1 | Done / Partial | Monorepo iskeleti oluşturuldu. |
+| Step 2 | Done | Web transfer formu: `apps/web/pages/transfer.tsx` |
+| Step 3 | Done | Firestore transfer kayıt servisi: `packages/firebase/src/requests.ts` |
+| Step 4 | Done / MVP | Admin transfer listesi: `apps/admin/pages/transfers.tsx` |
+| Step 5 | Next | Admin sağlayıcı oluşturma ve talep atama |
+| Step 6 | Pending | Provider kendi atanmış taleplerini görür |
+
+Para kazandıracak ilk sürüm için kritik hedef: **Step 1–6**.
+
+---
+
 ## Net Konumlandırma
 
 - Yolcu Arrivio'ya ödeme yapmaz.
@@ -52,21 +67,58 @@ arrivio-platform/
     mobile/     -> Expo React Native mobil uygulama (2. faz)
   packages/
     shared/     -> type'lar, status listeleri, sabitler, yardımcı fonksiyonlar
-    firebase/   -> firebase config, firestore servisleri, auth servisleri
-    ui/         -> ortak renkler, butonlar, kartlar, input stilleri
+    firebase/   -> firebase client, firestore servisleri, auth servisleri
+    ui-kit/     -> package name: @arrivio/ui, ortak renk/token yapısı
   docs/
-    product-roadmap.md
-    provider-agreements.md
-    commission-rules.md
-    firebase-schema.md
-    qr-strategy.md
     provider-login-flow.md
+    step-3-firestore-transfer.md
     claude-implementation-brief.md
   README.md
   ROADMAP.md
 ```
 
 **Neden tek repo?** Transfer, rent a car, otel ve bilet talepleri hem webde hem admin'de hem provider panelde hem ileride mobilde aynı veriyle çalışacak. Status değerleri, komisyon hesaplama, telefon formatlama ve talep kodu üretme gibi ortak mantık `packages/shared` üzerinden tek yerden yönetilir.
+
+Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `packages/ui-kit` klasöründe tutuldu. Paket adı yine `@arrivio/ui` olduğu için workspace dependency çözülür.
+
+---
+
+## Çalışan Route'lar
+
+### Web
+
+```text
+/
+/transfer
+```
+
+`/transfer` yolcu transfer talebi toplar. Form verisi `createTransferRequest()` üzerinden Firestore `transferRequests` koleksiyonuna yazılır.
+
+### Admin
+
+```text
+/
+/transfers
+```
+
+`/transfers` Firestore'dan son transfer taleplerini listeler. Bu ekran Step 4 MVP ekranıdır.
+
+---
+
+## Firebase Env
+
+Local geliştirmede `.env.local` içine şu değerler gerekir:
+
+```text
+NEXT_PUBLIC_FIREBASE_WEB_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+Firebase web config değerindeki `apiKey`, projede `NEXT_PUBLIC_FIREBASE_WEB_KEY` olarak kullanılır.
 
 ---
 
@@ -190,17 +242,18 @@ Detaylı kurallar için: [`docs/commission-rules.md`](./docs/commission-rules.md
 
 ## Çalışma Sırası
 
-1. Web + admin + provider + shared packages iskeleti.
-2. Firebase veri modeli.
-3. Provider Auth + providerId güvenlik mantığı.
-4. Transfer talep formu.
-5. Admin talep listesi.
-6. Provider talep listesi.
-7. Rent a car / otel / bilet formları.
-8. QR kaynak takibi.
-9. Komisyon takibi.
-10. İlk gerçek sağlayıcı görüşmeleri.
-11. Mobil uygulama 2. faz.
+1. Web + admin + provider + shared packages iskeleti. Done / Partial
+2. Firebase veri modeli. Done / Partial
+3. Transfer talep formu. Done
+4. Transfer formu Firestore kaydı. Done
+5. Admin transfer talep listesi. Done / MVP
+6. Admin sağlayıcı oluşturma ve talep atama. Next
+7. Provider kendi atanmış talep listesi.
+8. Rent a car / otel / bilet formları.
+9. QR kaynak takibi.
+10. Komisyon takibi.
+11. Marka tasarımı, logo, landing UI.
+12. Mobil uygulama 2. faz.
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
 
