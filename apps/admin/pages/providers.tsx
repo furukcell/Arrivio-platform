@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState } from "react";
-import { createProvider, getAppUserByUid, listenToCurrentUser, listProviders, logoutCurrentUser } from "@arrivio/firebase";
+import { createProvider, getAppUserByUid, listenToCurrentUser, listProviders, logoutCurrentUser, upsertAppUser } from "@arrivio/firebase";
 import type { Provider, ProviderType } from "@arrivio/shared";
 import {
   formatProviderCard,
@@ -40,6 +40,9 @@ export default function AdminProvidersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
+  const [userIds, setUserIds] = useState<Record<string, string>>({});
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
+  const [linkingId, setLinkingId] = useState("");
 
   async function loadProviders() {
     if (!isAdmin) {
@@ -89,8 +92,52 @@ export default function AdminProvidersPage() {
     }
   }
 
+  async function linkProviderUser(provider: Provider) {
+    if (!isAdmin) {
+      setStatus("Admin login required.");
+      return;
+    }
+
+    if (!provider.id) {
+      setStatus("Provider id is missing.");
+      return;
+    }
+
+    const uid = userIds[provider.id]?.trim();
+    const email = userEmails[provider.id]?.trim() || provider.email || "";
+
+    if (!uid) {
+      setStatus("Auth UID is required.");
+      return;
+    }
+
+    setLinkingId(provider.id);
+    try {
+      await upsertAppUser({
+        uid,
+        role: "provider",
+        providerId: provider.id,
+        email,
+        displayName: provider.name
+      });
+      setStatus(`${provider.name} linked to provider auth user.`);
+    } catch (error) {
+      setStatus("Provider auth user could not be linked.");
+    } finally {
+      setLinkingId("");
+    }
+  }
+
   function updateField<K extends keyof ProviderFormState>(key: K, value: ProviderFormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateProviderUserId(providerId: string, uid: string) {
+    setUserIds((current) => ({ ...current, [providerId]: uid }));
+  }
+
+  function updateProviderUserEmail(providerId: string, email: string) {
+    setUserEmails((current) => ({ ...current, [providerId]: email }));
   }
 
   async function logoutAdmin() {
@@ -173,7 +220,30 @@ export default function AdminProvidersPage() {
         createElement("h3", { style: { margin: "0 0 6px" } }, provider.name),
         createElement("p", { style: { margin: "0 0 6px", color: "#0B63F6", fontWeight: 700 } }, formatProviderCard(provider)),
         createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${provider.phone}`),
-        provider.email ? createElement("p", { style: { margin: 0 } }, `Email: ${provider.email}`) : null
+        provider.email ? createElement("p", { style: { margin: "0 0 12px" } }, `Email: ${provider.email}`) : null,
+        provider.id ? createElement("div", { style: { marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #E5E7EB" } },
+          createElement("h4", { style: { margin: "0 0 8px" } }, "Link Firebase Auth User"),
+          createElement("input", {
+            style: inputStyle,
+            disabled: !isAdmin,
+            value: userIds[provider.id] || "",
+            onChange: (event) => updateProviderUserId(provider.id || "", event.currentTarget.value),
+            placeholder: "Firebase Auth UID"
+          }),
+          createElement("input", {
+            style: inputStyle,
+            disabled: !isAdmin,
+            value: userEmails[provider.id] || provider.email || "",
+            onChange: (event) => updateProviderUserEmail(provider.id || "", event.currentTarget.value),
+            placeholder: "Provider auth email"
+          }),
+          createElement("button", {
+            type: "button",
+            onClick: () => linkProviderUser(provider),
+            disabled: !isAdmin || linkingId === provider.id,
+            style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer" }
+          }, linkingId === provider.id ? "Linking..." : "Link Auth User")
+        ) : null
       )
     )
   );
