@@ -101,6 +101,16 @@ export async function createCarRentalRequest(payload: CreateCarRentalPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.carRentalRequests), withTimestamps(payload));
 }
 
+export async function listCarRentalRequests(maxItems = 50): Promise<CarRentalRequest[]> {
+  const carRentalQuery = query(
+    collection(firestoreDb, COLLECTIONS.carRentalRequests),
+    orderBy("createdAt", "desc"),
+    limit(maxItems)
+  );
+  const snapshot = await getDocs(carRentalQuery);
+  return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as CarRentalRequest) }));
+}
+
 export async function createHotelRequest(payload: CreateHotelPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.hotelRequests), withTimestamps(payload));
 }
