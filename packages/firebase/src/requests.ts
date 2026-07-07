@@ -4,8 +4,11 @@ import type {
   TransferStatus,
   CommissionStatus,
   CarRentalRequest,
+  CarRentalStatus,
   HotelRequest,
-  TicketRequest
+  HotelStatus,
+  TicketRequest,
+  TicketStatus
 } from "@arrivio/shared";
 import { firestoreDb } from "./client";
 import { COLLECTIONS } from "./collections";
@@ -35,10 +38,24 @@ export type UpdateTransferCommissionPayload = {
   adminNote?: string;
 };
 
+export type UpdateLeadStatusPayload<TStatus extends string> = {
+  requestId: string;
+  status: TStatus;
+  adminNote?: string;
+};
+
 function withTimestamps<T extends object>(payload: T) {
   return {
     ...payload,
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+}
+
+function leadStatusUpdate<TStatus extends string>(status: TStatus, adminNote?: string) {
+  return {
+    status,
+    adminNote: adminNote || "",
     updatedAt: serverTimestamp()
   };
 }
@@ -111,6 +128,11 @@ export async function listCarRentalRequests(maxItems = 50): Promise<CarRentalReq
   return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as CarRentalRequest) }));
 }
 
+export async function updateCarRentalStatus(payload: UpdateLeadStatusPayload<CarRentalStatus>) {
+  const requestRef = doc(firestoreDb, COLLECTIONS.carRentalRequests, payload.requestId);
+  return updateDoc(requestRef, leadStatusUpdate(payload.status, payload.adminNote));
+}
+
 export async function createHotelRequest(payload: CreateHotelPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.hotelRequests), withTimestamps(payload));
 }
@@ -125,6 +147,11 @@ export async function listHotelRequests(maxItems = 50): Promise<HotelRequest[]> 
   return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as HotelRequest) }));
 }
 
+export async function updateHotelStatus(payload: UpdateLeadStatusPayload<HotelStatus>) {
+  const requestRef = doc(firestoreDb, COLLECTIONS.hotelRequests, payload.requestId);
+  return updateDoc(requestRef, leadStatusUpdate(payload.status, payload.adminNote));
+}
+
 export async function createTicketRequest(payload: CreateTicketPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.ticketRequests), withTimestamps(payload));
 }
@@ -137,4 +164,9 @@ export async function listTicketRequests(maxItems = 50): Promise<TicketRequest[]
   );
   const snapshot = await getDocs(ticketQuery);
   return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as TicketRequest) }));
+}
+
+export async function updateTicketStatus(payload: UpdateLeadStatusPayload<TicketStatus>) {
+  const requestRef = doc(firestoreDb, COLLECTIONS.ticketRequests, payload.requestId);
+  return updateDoc(requestRef, leadStatusUpdate(payload.status, payload.adminNote));
 }
