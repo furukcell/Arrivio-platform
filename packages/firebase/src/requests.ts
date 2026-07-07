@@ -2,6 +2,7 @@ import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestam
 import type {
   TransferRequest,
   TransferStatus,
+  CommissionStatus,
   CarRentalRequest,
   HotelRequest,
   TicketRequest
@@ -24,6 +25,14 @@ export type UpdateTransferStatusPayload = {
   requestId: string;
   status: TransferStatus;
   providerNote?: string;
+};
+
+export type UpdateTransferCommissionPayload = {
+  requestId: string;
+  estimatedTotalPrice?: number;
+  commissionAmount?: number;
+  commissionStatus: CommissionStatus;
+  adminNote?: string;
 };
 
 function withTimestamps<T extends object>(payload: T) {
@@ -73,6 +82,17 @@ export async function updateTransferStatus(payload: UpdateTransferStatusPayload)
   return updateDoc(transferRef, {
     status: payload.status,
     providerNote: payload.providerNote,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function updateTransferCommission(payload: UpdateTransferCommissionPayload) {
+  const transferRef = doc(firestoreDb, COLLECTIONS.transferRequests, payload.requestId);
+  return updateDoc(transferRef, {
+    estimatedTotalPrice: payload.estimatedTotalPrice,
+    commissionAmount: payload.commissionAmount,
+    commissionStatus: payload.commissionStatus,
+    adminNote: payload.adminNote,
     updatedAt: serverTimestamp()
   });
 }
