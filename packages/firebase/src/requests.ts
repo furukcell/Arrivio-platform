@@ -1,4 +1,4 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, getDocs, limit, orderBy, query, serverTimestamp } from "firebase/firestore";
 import type {
   TransferRequest,
   CarRentalRequest,
@@ -23,6 +23,16 @@ function withTimestamps<T extends object>(payload: T) {
 
 export async function createTransferRequest(payload: CreateTransferPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.transferRequests), withTimestamps(payload));
+}
+
+export async function listTransferRequests(maxItems = 50): Promise<TransferRequest[]> {
+  const transferQuery = query(
+    collection(firestoreDb, COLLECTIONS.transferRequests),
+    orderBy("createdAt", "desc"),
+    limit(maxItems)
+  );
+  const snapshot = await getDocs(transferQuery);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as TransferRequest) }));
 }
 
 export async function createCarRentalRequest(payload: CreateCarRentalPayload) {
