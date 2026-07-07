@@ -115,6 +115,16 @@ export async function createHotelRequest(payload: CreateHotelPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.hotelRequests), withTimestamps(payload));
 }
 
+export async function listHotelRequests(maxItems = 50): Promise<HotelRequest[]> {
+  const hotelQuery = query(
+    collection(firestoreDb, COLLECTIONS.hotelRequests),
+    orderBy("createdAt", "desc"),
+    limit(maxItems)
+  );
+  const snapshot = await getDocs(hotelQuery);
+  return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as HotelRequest) }));
+}
+
 export async function createTicketRequest(payload: CreateTicketPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.ticketRequests), withTimestamps(payload));
 }
