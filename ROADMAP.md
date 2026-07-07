@@ -1,19 +1,40 @@
 # Arrivio Yol Haritası
 
-Bu dosya geliştirme ve operasyon sırasını belirler. Sıralama önemlidir: önce web/admin/provider canlıya çıkacak, mobil uygulama paralelde ama ikinci öncelik olarak ilerleyecek.
+Bu dosya geliştirme ve operasyon sırasını belirler. Öncelik sırası değişmedi: önce web, admin ve provider canlıya çıkacak; mobil uygulama paralelde ama ikinci öncelik olarak ilerleyecek.
+
+---
+
+## Güncel Durum
+
+| Step | Durum | Açıklama |
+|---|---|---|
+| Step 1 | Done / Partial | Monorepo iskeleti oluşturuldu. `apps/web`, `apps/admin`, `apps/provider`, `apps/mobile`, `packages/shared`, `packages/firebase`, `packages/ui-kit` var. |
+| Step 2 | Done | Web transfer formu eklendi: `/transfer`. |
+| Step 3 | Done | Transfer formu Firestore `transferRequests` koleksiyonuna gerçek kayıt atacak hale getirildi. |
+| Step 4 | Done / MVP | Admin panelde transfer talepleri listeleniyor: `/transfers`. |
+| Step 5 | Next | Admin panelde sağlayıcı oluşturma ve transfer talebini sağlayıcıya atama. |
+| Step 6 | Pending | Provider panelde sadece kendisine atanmış talepleri görme. |
+| Step 7 | Pending | Komisyon takibi. |
+| Step 8 | Pending | QR kaynak takibi. |
+| Step 9 | Pending | Rent a car formu. |
+| Step 10 | Pending | Otel uygunluk talep formu. |
+| Step 11 | Pending | Bilet talep formu. |
+| Step 12 | Pending | Mobil MVP. |
+
+Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `packages/ui-kit` klasöründe tutuldu. Paket adı yine `@arrivio/ui` olduğu için workspace dependency çözülür.
 
 ---
 
 ## Faz 0 — Repo ve Ürün Kurulumu
 
-- [ ] `pnpm-workspace.yaml` ve kök `package.json` oluştur.
-- [ ] `apps/web`, `apps/admin`, `apps/provider`, `apps/mobile` klasörlerini oluştur.
-- [ ] `packages/shared`, `packages/firebase`, `packages/ui` klasörlerini oluştur.
-- [ ] `docs/` altındaki strateji dosyalarını oluştur.
+- [x] `pnpm-workspace.yaml` ve kök `package.json` oluştur.
+- [x] `apps/web`, `apps/admin`, `apps/provider`, `apps/mobile` klasörlerini oluştur.
+- [x] `packages/shared`, `packages/firebase`, `packages/ui-kit` klasörlerini oluştur.
+- [x] `docs/` altındaki strateji dosyalarını oluştur.
 - [ ] Firebase projesini aç: `Arrivio MVP` veya `Arrivio Production`.
 - [ ] Firestore, Auth ve Storage servislerini aktif et.
-- [ ] `.env.example` dosyasını oluştur.
-- [ ] Provider Auth kararını uygula: MVP'de sağlayıcı login olacak.
+- [x] `.env.example` dosyasını oluştur.
+- [x] Provider Auth kararını uygula: MVP'de sağlayıcı login olacak.
 - [ ] Domain adaylarını kontrol et: `arrivio.com.tr`, `arrivio.app`, `arrivio.travel`.
 - [ ] Sosyal medya kullanıcı adı kontrolü yap.
 - [ ] Acenteci arkadaşla komisyon ve operasyon konuşmasına başla.
@@ -24,21 +45,21 @@ Bu dosya geliştirme ve operasyon sırasını belirler. Sıralama önemlidir: ö
 
 Amaç: QR okutan yolcunun uygulama indirmeden talep bırakabilmesi.
 
-- [ ] `apps/web` Next.js projesi ayağa kalkacak.
+- [x] `apps/web` Next.js projesi ayağa kalkacak.
 - [ ] TR/EN dil yapısı kurulacak.
 - [ ] Ana sayfada 4 aksiyon net görünecek:
   - Transfer
   - Car Rental
   - Hotels
   - Ticket Request
-- [ ] Transfer formu Firestore `transferRequests` koleksiyonuna kayıt atacak.
+- [x] Transfer formu Firestore `transferRequests` koleksiyonuna kayıt atacak.
 - [ ] Rent a car formu Firestore `carRentalRequests` koleksiyonuna kayıt atacak.
 - [ ] Otel formu Firestore `hotelRequests` koleksiyonuna kayıt atacak.
 - [ ] Bilet formu Firestore `ticketRequests` koleksiyonuna kayıt atacak.
-- [ ] Her talep için kod üretilecek.
-- [ ] Yolcuya form sonrası talep kodu gösterilecek.
+- [x] Transfer talebi için kod üretilecek.
+- [x] Yolcuya transfer formu sonrası talep kodu gösterilecek.
 - [ ] WhatsApp destek butonu eklenecek.
-- [ ] “Arrivio yolcudan ücret almaz” metni net görünecek.
+- [x] “Arrivio yolcudan ücret almaz” metni transfer sayfasında görünecek.
 
 ---
 
@@ -46,10 +67,10 @@ Amaç: QR okutan yolcunun uygulama indirmeden talep bırakabilmesi.
 
 Amaç: Operasyon ekibi tüm talepleri, sağlayıcıları ve komisyonları yönetebilsin.
 
-- [ ] `apps/admin` Next.js projesi ayağa kalkacak.
+- [x] `apps/admin` Next.js projesi ayağa kalkacak.
 - [ ] Admin Firebase Auth login oluşturulacak.
 - [ ] Admin role kontrolü yapılacak.
-- [ ] Transfer talepleri listelenecek.
+- [x] Transfer talepleri listelenecek.
 - [ ] Rent a car talepleri listelenecek.
 - [ ] Otel talepleri listelenecek.
 - [ ] Bilet talepleri listelenecek.
@@ -65,7 +86,7 @@ Amaç: Operasyon ekibi tüm talepleri, sağlayıcıları ve komisyonları yönet
   - `paid`
   - `cancelled`
 - [ ] Admin işlem notu ekleyebilecek.
-- [ ] Admin log mantığı veri modelinde hazır olacak.
+- [x] Admin log mantığı veri modelinde hazır.
 
 ---
 
@@ -73,7 +94,7 @@ Amaç: Operasyon ekibi tüm talepleri, sağlayıcıları ve komisyonları yönet
 
 Amaç: Sağlayıcı kendi hesabıyla giriş yapıp kendisine atanmış talepleri yönetebilsin.
 
-- [ ] `apps/provider` Next.js projesi ayağa kalkacak.
+- [x] `apps/provider` Next.js projesi repo iskeletinde var.
 - [ ] Provider Firebase Auth login oluşturulacak.
 - [ ] `users/{uid}.role = provider` kontrolü yapılacak.
 - [ ] `users/{uid}.providerId` ile provider eşleşmesi yapılacak.
@@ -94,8 +115,8 @@ Amaç: Sağlayıcı kendi hesabıyla giriş yapıp kendisine atanmış talepleri
 
 Amaç: Havalimanı reklam/QR kaynaklarının hangisinin çalıştığını ölçmek.
 
-- [ ] `qrSources` koleksiyonu kurulacak.
-- [ ] `qrEvents` koleksiyonu kurulacak.
+- [x] `qrSources` koleksiyonu veri modelinde hazır.
+- [x] `qrEvents` koleksiyonu veri modelinde hazır.
 - [ ] QR linkleri çalışacak:
   - `/qr/bjv-domestic-arrivals`
   - `/qr/bjv-international-arrivals`
@@ -129,7 +150,7 @@ Amaç: Sezon bitmeden ilk gerçek talep ve ilk komisyon.
 
 Mobil uygulama web/admin/provider canlıyken paralel ilerler. Para kazanma için web bekletilmez.
 
-- [ ] `apps/mobile` Expo projesi oluştur.
+- [x] `apps/mobile` Expo placeholder oluşturuldu.
 - [ ] Home ekranı taslağı:
   - Transfer
   - Car Rental
@@ -150,15 +171,16 @@ Mobil uygulama web/admin/provider canlıyken paralel ilerler. Para kazanma için
 - [ ] Mobil ekranda tek elle kullanılabilir.
 - [ ] TR/EN dil seçimi görünür.
 - [ ] Ana sayfada Transfer / Car Rental / Hotels / Ticket aksiyonları net.
-- [ ] Form gönderince Firestore kaydı oluşur.
-- [ ] Form sonrası talep kodu görünür.
+- [x] Transfer formu gönderince Firestore kaydı oluşur.
+- [x] Transfer formu sonrası talep kodu görünür.
 - [ ] QR kaynağı talebe yazılır.
 - [ ] WhatsApp destek butonu görünür.
-- [ ] Yolcudan ücret alınmayacağı net yazılıdır.
+- [x] Yolcudan ücret alınmayacağı transfer ekranında yazılıdır.
 
 ### Admin
 
-- [ ] Admin tüm talepleri görebilir.
+- [x] Admin transfer taleplerini görebilir.
+- [ ] Admin tüm talep türlerini görebilir.
 - [ ] Status güncelleyebilir.
 - [ ] Sağlayıcı oluşturabilir.
 - [ ] Sağlayıcı atayabilir.
@@ -179,13 +201,13 @@ Mobil uygulama web/admin/provider canlıyken paralel ilerler. Para kazanma için
 
 ## Yapılmayacaklar
 
-- [ ] ~~Uygulama bitmeden web'i bekletmek~~
-- [ ] ~~İlk günden online ödeme kurmak~~
-- [ ] ~~Canlı otel stoğu varmış gibi göstermek~~
-- [ ] ~~Belgesiz transfer sağlayıcısı listelemek~~
+- [x] ~~Uygulama bitmeden web'i bekletmek~~
+- [x] ~~İlk günden online ödeme kurmak~~
+- [x] ~~Canlı otel stoğu varmış gibi göstermek~~
+- [x] ~~Belgesiz transfer sağlayıcısı listelemek~~
 - [ ] ~~QR takibi olmadan reklam basmak~~
-- [ ] ~~Web, admin, provider ve mobile için ayrı backend kurmak~~
-- [ ] ~~Yolcuyu hesap açmaya zorlamak~~
+- [x] ~~Web, admin, provider ve mobile için ayrı backend kurmak~~
+- [x] ~~Yolcuyu hesap açmaya zorlamak~~
 
 ---
 
@@ -194,7 +216,7 @@ Mobil uygulama web/admin/provider canlıyken paralel ilerler. Para kazanma için
 | Dönem | Ölçüt | Hedef |
 |---|---|---|
 | İlk 7 gün | Web MVP | Canlı test edilebilir |
-| İlk 7 gün | Admin panel | Gelen talebi görebilir |
+| İlk 7 gün | Admin panel | Gelen transfer talebini görebilir |
 | İlk 10 gün | Provider panel | Sağlayıcı kendi talebini görebilir |
 | İlk 15 gün | Sağlayıcı | 3 transfer + 3 rent a car + 3 otel |
 | İlk 15 gün | Talep | İlk gerçek talepler |
