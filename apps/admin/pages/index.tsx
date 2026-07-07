@@ -25,8 +25,9 @@ export default function AdminHomePage() {
     "main",
     { style: pageStyle },
     createElement("h1", { style: { fontSize: "42px", margin: "0 0 12px" } }, "Arrivio Admin"),
-    createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "Operational dashboard for transfer, provider and commission workflows."),
+    createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "Operational dashboard for transfer, provider, commission and QR workflows."),
     createElement("a", { href: "/transfers", style: linkStyle }, "View Transfer Requests"),
-    createElement("a", { href: "/providers", style: linkStyle }, "Manage Providers")
+    createElement("a", { href: "/providers", style: linkStyle }, "Manage Providers"),
+    createElement("a", { href: "/qr", style: linkStyle }, "QR Tracking")
   );
 }
