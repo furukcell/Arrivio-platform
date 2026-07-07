@@ -27,9 +27,10 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 13 | Done / MVP | Rent a car talep formu ve admin listeleme eklendi. |
 | Step 14 | Done / MVP | Otel uygunluk talep formu ve admin listeleme eklendi. |
 | Step 15 | Done / MVP | Bilet talep formu ve admin listeleme eklendi. |
-| Step 16 | Next | Mobil MVP. |
+| Step 16 | In Progress | Admin lead status update eklendi: rent a car, hotel ve ticket listelerinden status değiştirilebilir. |
+| Step 17 | Next | Talep detay ekranı ve operasyon notları. |
 
-Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor.
+Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor ve lead status güncelleyebiliyor.
 
 ---
 
@@ -112,9 +113,9 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 
 - `/login` admin email/password girişidir.
 - `/transfers` transfer taleplerini listeler, provider atama ve komisyon takibi yapar.
-- `/car-rental` araç kiralama taleplerini listeler.
-- `/hotel` otel uygunluk taleplerini listeler.
-- `/ticket` bilet taleplerini listeler.
+- `/car-rental` araç kiralama taleplerini listeler ve lead status günceller.
+- `/hotel` otel uygunluk taleplerini listeler ve lead status günceller.
+- `/ticket` bilet taleplerini listeler ve lead status günceller.
 - `/providers` sağlayıcı oluşturma ve provider Auth UID bağlama ekranıdır.
 - `/qr` QR source oluşturma ve QR event listeleme ekranıdır.
 
@@ -198,6 +199,10 @@ displayName?: string
 12. Rent a car formu. Done / MVP
 13. Otel formu. Done / MVP
 14. Bilet formu. Done / MVP
-15. Mobil uygulama. Next
+15. Admin lead status güncelleme. In Progress
+16. Talep detay ekranı ve operasyon notları. Next
+17. Web TR/EN + WhatsApp destek. Pending
+18. Provider panel güçlendirme. Pending
+19. Mobil uygulama. Pending
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
