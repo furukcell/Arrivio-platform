@@ -30,9 +30,10 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 16 | Done / MVP | Admin lead status update eklendi: rent a car, hotel ve ticket listelerinden status değiştirilebilir. |
 | Step 17 | Done / Partial | Transfer, rent a car ve otel detay ekranları eklendi. |
 | Step 18 | Done / Partial | Ana sayfada TR/EN başlangıcı ve formlarda WhatsApp destek eklendi. |
-| Step 19 | Next | Provider panel güçlendirme. |
+| Step 19 | Done / MVP | Provider WhatsApp, fiyat/not ve aktif/tamamlanan iş ayrımı eklendi. |
+| Step 20 | Next | Mobil MVP. |
 
-Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor, status güncelleyebiliyor ve temel detay/operasyon notu akışı başladı.
+Mobilden önceki web/admin/provider MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor, provider kendi işlerinde müşteriye WhatsApp'tan geçebiliyor ve fiyat/not girebiliyor.
 
 ---
 
@@ -44,7 +45,7 @@ Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel
 - Transfer tarafında sadece belge kontrolünden geçmiş sağlayıcılar listelenir.
 - İlk canlı ürün mobil web/PWA'dır. Play Store / App Store süreci beklenmez.
 - Online ödeme, WhatsApp API ve Flight API ilk MVP'de yoktur.
-- WhatsApp destek sadece normal `wa.me` linkidir; API entegrasyonu değildir.
+- WhatsApp destek ve provider-yolcu geçişi normal `wa.me` linkidir; API entegrasyonu değildir.
 
 ---
 
@@ -76,11 +77,10 @@ arrivio-platform/
     step-15-ticket-request-form.md
     step-17-request-detail-screens.md
     step-18-web-language-support.md
+    step-19-provider-panel-strengthening.md
   README.md
   ROADMAP.md
 ```
-
-Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `packages/ui-kit` klasöründe tutuldu. Paket adı yine `@arrivio/ui` olduğu için workspace dependency çözülür.
 
 ---
 
@@ -141,6 +141,9 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 
 - `/login` provider email/password girişidir.
 - `/transfers` Firebase Auth current user üzerinden `users/{uid}` profilini okur, `providerId` değerini bulur ve sadece o provider'a atanmış transferleri listeler.
+- `/transfers` içinde aktif işler ve tamamlanan işler ayrı gösterilir.
+- Provider transfer kartından yolcuya WhatsApp linkiyle geçebilir.
+- Provider transfer kartına fiyat ve not girebilir.
 
 ---
 
@@ -216,7 +219,7 @@ displayName?: string
 15. Admin lead status güncelleme. Done / MVP
 16. Talep detay ekranı ve operasyon notları. Done / Partial
 17. Web TR/EN + WhatsApp destek. Done / Partial
-18. Provider panel güçlendirme. Next
-19. Mobil uygulama. Pending
+18. Provider panel güçlendirme. Done / MVP
+19. Mobil uygulama. Next
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
