@@ -3,11 +3,13 @@ import { useRouter } from "next/router";
 import { createTicketRequest } from "@arrivio/firebase";
 import { createTicketRequestCode, initialTicketFormState, validateTicketForm, type TicketFormState } from "../src/ticketFormModel";
 import { mapTicketFormToRequest } from "../src/ticketRequestMapper";
+import { getLanguage, whatsappSupportUrl } from "../src/supportModel";
 
-const pageStyle = { minHeight: "100vh", padding: "32px", fontFamily: "Arial, sans-serif", background: "#F7FBFF", color: "#08183A" };
-const cardStyle = { maxWidth: "720px", margin: "0 auto", padding: "28px", borderRadius: "24px", background: "#FFFFFF", boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)" };
+const pageStyle = { minHeight: "100vh", padding: "24px", fontFamily: "Arial, sans-serif", background: "#F7FBFF", color: "#08183A" };
+const cardStyle = { maxWidth: "720px", margin: "0 auto", padding: "24px", borderRadius: "24px", background: "#FFFFFF", boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)" };
 const inputStyle = { width: "100%", padding: "14px", marginTop: "6px", marginBottom: "14px", border: "1px solid #D1D5DB", borderRadius: "12px", fontSize: "16px" };
 const buttonStyle = { width: "100%", padding: "15px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, fontSize: "16px", cursor: "pointer" };
+const supportStyle = { display: "block", width: "100%", boxSizing: "border-box" as const, textAlign: "center" as const, padding: "15px", borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, textDecoration: "none", marginTop: "12px" };
 
 function queryValue(rawValue: string | string[] | undefined): string {
   if (Array.isArray(rawValue)) return rawValue[0] || "";
@@ -16,6 +18,7 @@ function queryValue(rawValue: string | string[] | undefined): string {
 
 export default function TicketPage() {
   const router = useRouter();
+  const language = getLanguage(router.query.lang);
   const qrSourceId = queryValue(router.query.qrSourceId);
   const [form, setForm] = useState<TicketFormState>(initialTicketFormState);
   const [status, setStatus] = useState("");
@@ -66,6 +69,7 @@ export default function TicketPage() {
       createElement("label", null, "Passengers"),
       createElement("input", { style: inputStyle, type: "number", min: 1, value: form.passengers, onChange: (event) => updateField("passengers", Number(event.currentTarget.value)) }),
       createElement("button", { style: buttonStyle, type: "button", onClick: submitRequest, disabled: isSubmitting }, isSubmitting ? "Sending..." : "Request Ticket"),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, "WhatsApp Support"),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
       requestCode ? createElement("p", { style: { marginTop: "8px" } }, `Request code: ${requestCode}`) : null
     )
