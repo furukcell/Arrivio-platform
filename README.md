@@ -16,12 +16,20 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 2 | Done | Web transfer formu: `apps/web/pages/transfer.tsx` |
 | Step 3 | Done | Firestore transfer kayıt servisi: `packages/firebase/src/requests.ts` |
 | Step 4 | Done / MVP | Admin transfer listesi: `apps/admin/pages/transfers.tsx` |
-| Step 5 | Done / MVP | Admin provider oluşturma ve transfer atama: `apps/admin/pages/providers.tsx` + `/transfers` |
-| Step 6 | Done / MVP | Provider kendi atanmış transferlerini görür ve status günceller: `apps/provider/pages/transfers.tsx` |
-| Step 7 | Done / Partial | Provider login, Auth profile ve `users/{uid}.providerId` okuma eklendi. |
-| Step 8 | Next | Firestore rules, admin guard ve provider query fallback kaldırma. |
+| Step 5 | Done / MVP | Admin provider oluşturma ve transfer atama eklendi. |
+| Step 6 | Done / MVP | Provider kendi atanmış transferlerini görür ve status günceller. |
+| Step 7 | Done / Partial | Provider login ve `users/{uid}.providerId` okuma eklendi. |
+| Step 8 | Done / Draft | Firestore rules draft repoya eklendi. |
+| Step 9 | Done / Partial | Admin login ve admin guard eklendi. |
+| Step 10 | Done / MVP | Provider query fallback kaldırıldı ve provider Auth UID bağlama eklendi. |
+| Step 11 | Done / MVP | Transfer komisyon takibi eklendi. |
+| Step 12 | Done / MVP | QR source ve QR event takibi eklendi. |
+| Step 13 | Done / MVP | Rent a car talep formu ve admin listeleme eklendi. |
+| Step 14 | Done / MVP | Otel uygunluk talep formu ve admin listeleme eklendi. |
+| Step 15 | Done / MVP | Bilet talep formu ve admin listeleme eklendi. |
+| Step 16 | Next | Mobil MVP. |
 
-Para kazandıracak ilk sürüm için kritik hedef olan Step 1–6 MVP seviyesinde tamamlandı. Step 7 ile provider tarafı Auth mimarisine bağlandı.
+Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor.
 
 ---
 
@@ -44,18 +52,24 @@ arrivio-platform/
     web/        -> Next.js mobil web / PWA / landing / QR sayfaları
     admin/      -> Next.js admin panel
     provider/   -> Next.js sağlayıcı paneli
-    mobile/     -> Expo React Native mobil uygulama (2. faz)
+    mobile/     -> Expo React Native mobil uygulama
   packages/
     shared/     -> type'lar, status listeleri, sabitler, yardımcı fonksiyonlar
     firebase/   -> firebase client, firestore servisleri, auth servisleri
     ui-kit/     -> package name: @arrivio/ui, ortak renk/token yapısı
   docs/
-    provider-login-flow.md
     step-3-firestore-transfer.md
     step-5-admin-provider-assignment.md
     step-6-provider-assigned-transfers.md
     step-7-auth-provider-security.md
-    claude-implementation-brief.md
+    step-8-firestore-rules.md
+    step-9-admin-auth-guard.md
+    step-10-provider-user-linking.md
+    step-11-commission-tracking.md
+    step-12-qr-tracking.md
+    step-13-car-rental-form.md
+    step-14-hotel-request-form.md
+    step-15-ticket-request-form.md
   README.md
   ROADMAP.md
 ```
@@ -71,21 +85,38 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 ```text
 /
 /transfer
+/car-rental
+/hotel
+/ticket
+/qr/[slug]
 ```
 
-`/transfer` yolcu transfer talebi toplar. Form verisi Firestore `transferRequests` koleksiyonuna yazılır.
+- `/transfer` yolcu transfer talebi toplar.
+- `/car-rental` yolcu araç kiralama talebi toplar.
+- `/hotel` yolcu otel uygunluk talebi toplar.
+- `/ticket` yolcu bilet talebi toplar.
+- `/qr/[slug]` QR source event kaydeder ve yolcuyu talep akışına taşır.
 
 ### Admin
 
 ```text
 /
+/login
 /transfers
+/car-rental
+/hotel
+/ticket
 /providers
+/qr
 ```
 
-`/transfers` Firestore'dan transfer taleplerini listeler ve transfer sağlayıcıya atama yapar.
-
-`/providers` Firestore `providers` koleksiyonuna sağlayıcı oluşturur ve mevcut sağlayıcıları listeler.
+- `/login` admin email/password girişidir.
+- `/transfers` transfer taleplerini listeler, provider atama ve komisyon takibi yapar.
+- `/car-rental` araç kiralama taleplerini listeler.
+- `/hotel` otel uygunluk taleplerini listeler.
+- `/ticket` bilet taleplerini listeler.
+- `/providers` sağlayıcı oluşturma ve provider Auth UID bağlama ekranıdır.
+- `/qr` QR source oluşturma ve QR event listeleme ekranıdır.
 
 ### Provider
 
@@ -93,14 +124,10 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 /
 /login
 /transfers
-/transfers?providerId=PROVIDER_DOC_ID
 ```
 
-`/login` provider email/password girişi yapar.
-
-`/transfers` Firebase Auth current user üzerinden `users/{uid}` profilini okur, `providerId` değerini bulur ve sadece o provider'a atanmış transferleri listeler.
-
-`/transfers?providerId=...` query fallback sadece lokal MVP test içindir. Canlıya çıkmadan önce kaldırılmalıdır.
+- `/login` provider email/password girişidir.
+- `/transfers` Firebase Auth current user üzerinden `users/{uid}` profilini okur, `providerId` değerini bulur ve sadece o provider'a atanmış transferleri listeler.
 
 ---
 
@@ -165,11 +192,12 @@ displayName?: string
 6. Admin sağlayıcı oluşturma ve talep atama. Done / MVP
 7. Provider kendi atanmış talep listesi. Done / MVP
 8. Firebase Auth + role/providerId güvenliği. Done / Partial
-9. Firestore rules + admin guard + query fallback kaldırma. Next
-10. Rent a car / otel / bilet formları.
-11. QR kaynak takibi.
-12. Komisyon takibi.
-13. Marka tasarımı, logo, landing UI.
-14. Mobil uygulama 2. faz.
+9. Firestore rules + admin guard + query fallback kaldırma. Done / Draft
+10. QR kaynak takibi. Done / MVP
+11. Komisyon takibi. Done / MVP
+12. Rent a car formu. Done / MVP
+13. Otel formu. Done / MVP
+14. Bilet formu. Done / MVP
+15. Mobil uygulama. Next
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
