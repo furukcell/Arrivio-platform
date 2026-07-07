@@ -8,7 +8,7 @@ import {
   type TransferFormState
 } from "../src/transferFormModel";
 import { mapTransferFormToRequest } from "../src/transferRequestMapper";
-import { getLanguage, whatsappSupportUrl } from "../src/supportModel";
+import { copy, getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
 
 const pageStyle = {
   minHeight: "100vh",
@@ -80,7 +80,7 @@ export default function TransferPage() {
   async function submitTransferRequest() {
     const error = validateTransferForm(form);
     if (error) {
-      setStatus(error);
+      setStatus(translateFormMessage(language, error));
       return;
     }
 
@@ -90,9 +90,9 @@ export default function TransferPage() {
       const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined);
       await createTransferRequest(payload);
       setRequestCode(code);
-      setStatus("Transfer request created. Arrivio will contact you soon.");
+      setStatus(copy(language, "Transfer talebiniz alindi. Arrivio size ulasacak.", "Transfer request created. Arrivio will contact you soon."));
     } catch (error) {
-      setStatus("Transfer request could not be created. Please try again.");
+      setStatus(copy(language, "Transfer talebi olusturulamadi. Lutfen tekrar deneyin.", "Transfer request could not be created. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -108,39 +108,40 @@ export default function TransferPage() {
     createElement(
       "section",
       { style: cardStyle },
+      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, copy(language, "Ana sayfa", "Home")),
       createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Milas-Bodrum Airport"),
-      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, "Request Airport Transfer"),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, "No app download. No passenger service fee. Verified providers only."),
-      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, "QR source detected.") : null,
-      createElement("label", null, "Passenger name"),
+      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, copy(language, "Transfer Talebi", "Request Airport Transfer")),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, copy(language, "Uygulama indirmeden, yolcudan hizmet bedeli alinmadan transfer talebi birakin.", "No app download. No passenger service fee. Verified providers only.")),
+      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, copy(language, "QR kaynagi algilandi.", "QR source detected.")) : null,
+      createElement("label", null, copy(language, "Yolcu adi", "Passenger name")),
       createElement("input", {
         style: inputStyle,
         value: form.passengerName,
         onChange: (event) => updateField("passengerName", event.currentTarget.value),
-        placeholder: "Full name"
+        placeholder: copy(language, "Ad soyad", "Full name")
       }),
-      createElement("label", null, "Phone / WhatsApp"),
+      createElement("label", null, copy(language, "Telefon / WhatsApp", "Phone / WhatsApp")),
       createElement("input", {
         style: inputStyle,
         value: form.passengerPhone,
         onChange: (event) => updateField("passengerPhone", event.currentTarget.value),
         placeholder: "+90 5xx xxx xx xx"
       }),
-      createElement("label", null, "Flight code"),
+      createElement("label", null, copy(language, "Ucus kodu", "Flight code")),
       createElement("input", {
         style: inputStyle,
         value: form.flightCode,
         onChange: (event) => updateField("flightCode", event.currentTarget.value),
         placeholder: "TK2524"
       }),
-      createElement("label", null, "Destination"),
+      createElement("label", null, copy(language, "Varis noktasi", "Destination")),
       createElement("input", {
         style: inputStyle,
         value: form.destination,
         onChange: (event) => updateField("destination", event.currentTarget.value),
         placeholder: "Bodrum Center, Yalikavak, Turgutreis..."
       }),
-      createElement("label", null, "Passengers"),
+      createElement("label", null, copy(language, "Yolcu sayisi", "Passengers")),
       createElement("input", {
         style: inputStyle,
         type: "number",
@@ -148,7 +149,7 @@ export default function TransferPage() {
         value: form.passengers,
         onChange: (event) => updateField("passengers", Number(event.currentTarget.value))
       }),
-      createElement("label", null, "Bags"),
+      createElement("label", null, copy(language, "Bagaj", "Bags")),
       createElement("input", {
         style: inputStyle,
         type: "number",
@@ -156,10 +157,10 @@ export default function TransferPage() {
         value: form.bags,
         onChange: (event) => updateField("bags", Number(event.currentTarget.value))
       }),
-      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? "Sending..." : "Request Transfer"),
-      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, "WhatsApp Support"),
+      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? copy(language, "Gonderiliyor...", "Sending...") : copy(language, "Transfer Talebi Gonder", "Request Transfer")),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, copy(language, "WhatsApp Destek", "WhatsApp Support")),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
-      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `Request code: ${requestCode}`) : null
+      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${copy(language, "Talep kodu", "Request code")}: ${requestCode}`) : null
     )
   );
 }
