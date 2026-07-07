@@ -27,10 +27,12 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 13 | Done / MVP | Rent a car talep formu ve admin listeleme eklendi. |
 | Step 14 | Done / MVP | Otel uygunluk talep formu ve admin listeleme eklendi. |
 | Step 15 | Done / MVP | Bilet talep formu ve admin listeleme eklendi. |
-| Step 16 | In Progress | Admin lead status update eklendi: rent a car, hotel ve ticket listelerinden status değiştirilebilir. |
-| Step 17 | Next | Talep detay ekranı ve operasyon notları. |
+| Step 16 | Done / MVP | Admin lead status update eklendi: rent a car, hotel ve ticket listelerinden status değiştirilebilir. |
+| Step 17 | Done / Partial | Transfer, rent a car ve otel detay ekranları eklendi. |
+| Step 18 | Done / Partial | Ana sayfada TR/EN başlangıcı ve formlarda WhatsApp destek eklendi. |
+| Step 19 | Next | Provider panel güçlendirme. |
 
-Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor ve lead status güncelleyebiliyor.
+Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel ve bilet talebi toplanabiliyor; admin panel bu talepleri görebiliyor, status güncelleyebiliyor ve temel detay/operasyon notu akışı başladı.
 
 ---
 
@@ -42,6 +44,7 @@ Mobilden önceki web/admin MVP omurgası tamamlandı: transfer, rent a car, otel
 - Transfer tarafında sadece belge kontrolünden geçmiş sağlayıcılar listelenir.
 - İlk canlı ürün mobil web/PWA'dır. Play Store / App Store süreci beklenmez.
 - Online ödeme, WhatsApp API ve Flight API ilk MVP'de yoktur.
+- WhatsApp destek sadece normal `wa.me` linkidir; API entegrasyonu değildir.
 
 ---
 
@@ -71,6 +74,8 @@ arrivio-platform/
     step-13-car-rental-form.md
     step-14-hotel-request-form.md
     step-15-ticket-request-form.md
+    step-17-request-detail-screens.md
+    step-18-web-language-support.md
   README.md
   ROADMAP.md
 ```
@@ -92,10 +97,11 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 /qr/[slug]
 ```
 
-- `/transfer` yolcu transfer talebi toplar.
-- `/car-rental` yolcu araç kiralama talebi toplar.
-- `/hotel` yolcu otel uygunluk talebi toplar.
-- `/ticket` yolcu bilet talebi toplar.
+- `/` ana sayfada servis aksiyonları, TR/EN başlangıç linkleri ve WhatsApp destek vardır.
+- `/transfer` yolcu transfer talebi toplar ve WhatsApp destek gösterir.
+- `/car-rental` yolcu araç kiralama talebi toplar ve WhatsApp destek gösterir.
+- `/hotel` yolcu otel uygunluk talebi toplar ve WhatsApp destek gösterir.
+- `/ticket` yolcu bilet talebi toplar ve WhatsApp destek gösterir.
 - `/qr/[slug]` QR source event kaydeder ve yolcuyu talep akışına taşır.
 
 ### Admin
@@ -104,8 +110,11 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 /
 /login
 /transfers
+/transfers/[id]
 /car-rental
+/car-rental/[id]
 /hotel
+/hotel/[id]
 /ticket
 /providers
 /qr
@@ -113,8 +122,11 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 
 - `/login` admin email/password girişidir.
 - `/transfers` transfer taleplerini listeler, provider atama ve komisyon takibi yapar.
+- `/transfers/[id]` transfer detay, komisyon ve admin operasyon notu ekranıdır.
 - `/car-rental` araç kiralama taleplerini listeler ve lead status günceller.
+- `/car-rental/[id]` araç kiralama detay ve admin operasyon notu ekranıdır.
 - `/hotel` otel uygunluk taleplerini listeler ve lead status günceller.
+- `/hotel/[id]` otel detay ve admin operasyon notu ekranıdır.
 - `/ticket` bilet taleplerini listeler ve lead status günceller.
 - `/providers` sağlayıcı oluşturma ve provider Auth UID bağlama ekranıdır.
 - `/qr` QR source oluşturma ve QR event listeleme ekranıdır.
@@ -143,6 +155,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_WHATSAPP_SUPPORT_NUMBER=
 ```
 
 ---
@@ -180,6 +193,7 @@ displayName?: string
 6. QR Kaynak Takibi
 7. Provider Panel
 8. Admin Komisyon Takibi
+9. WhatsApp Destek Linki
 
 ---
 
@@ -199,10 +213,10 @@ displayName?: string
 12. Rent a car formu. Done / MVP
 13. Otel formu. Done / MVP
 14. Bilet formu. Done / MVP
-15. Admin lead status güncelleme. In Progress
-16. Talep detay ekranı ve operasyon notları. Next
-17. Web TR/EN + WhatsApp destek. Pending
-18. Provider panel güçlendirme. Pending
+15. Admin lead status güncelleme. Done / MVP
+16. Talep detay ekranı ve operasyon notları. Done / Partial
+17. Web TR/EN + WhatsApp destek. Done / Partial
+18. Provider panel güçlendirme. Next
 19. Mobil uygulama. Pending
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
