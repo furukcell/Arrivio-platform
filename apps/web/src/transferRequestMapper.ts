@@ -1,17 +1,19 @@
 import type { TransferRequest } from "@arrivio/shared";
+import type { WebLanguage } from "./supportModel";
 import type { TransferFormState } from "./transferFormModel";
 
 export function mapTransferFormToRequest(
   state: TransferFormState,
   requestCode: string,
-  qrSourceId?: string
+  qrSourceId?: string,
+  languageOverride?: WebLanguage
 ): Omit<TransferRequest, "id" | "createdAt" | "updatedAt"> {
   return {
     type: "transfer",
     requestCode,
     passengerName: state.passengerName.trim(),
     passengerPhone: state.passengerPhone.trim(),
-    language: state.language,
+    language: languageOverride || state.language,
     airportCode: state.airportCode,
     flightCode: state.flightCode.trim() || undefined,
     destination: state.destination.trim(),
