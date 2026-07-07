@@ -2,9 +2,84 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasUserProfile() {
+      return signedIn() && exists(userPath());
+    }
+
+    function appUser() {
+      return get(userPath()).data;
+    }
+
+    function isAdmin() {
+      return hasUserProfile() && appUser().role == "admin";
+    }
+
+    function isProvider() {
+      return hasUserProfile() && appUser().role == "provider" && appUser().providerId is string;
+    }
+
+    function providerId() {
+      return appUser().providerId;
+    }
+
+    match /users/{userId} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /providers/{providerDocId} {
+      allow read: if isAdmin() || (isProvider() && providerId() == providerDocId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /transferRequests/{requestId} {
+      allow create: if true;
+      allow read: if isAdmin() || (isProvider() && resource.data.assignedProviderId == providerId());
+      allow update: if isAdmin() || (isProvider() && resource.data.assignedProviderId == providerId());
+      allow delete: if isAdmin();
+    }
+
+    match /carRentalRequests/{requestId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /hotelRequests/{requestId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /ticketRequests/{requestId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /qrSources/{sourceId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /qrEvents/{eventId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /commissions/{commissionId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /adminLogs/{logId} {
+      allow create, read: if isAdmin();
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
-      allow read: if false;
-      allow write: if false;
+      allow read, write: if false;
     }
   }
 }
