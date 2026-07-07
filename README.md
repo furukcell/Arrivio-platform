@@ -17,9 +17,10 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 3 | Done | Firestore transfer kayıt servisi: `packages/firebase/src/requests.ts` |
 | Step 4 | Done / MVP | Admin transfer listesi: `apps/admin/pages/transfers.tsx` |
 | Step 5 | Done / MVP | Admin provider oluşturma ve transfer atama: `apps/admin/pages/providers.tsx` + `/transfers` |
-| Step 6 | Next | Provider kendi atanmış taleplerini görür |
+| Step 6 | Done / MVP | Provider kendi atanmış transferlerini görür ve status günceller: `apps/provider/pages/transfers.tsx` |
+| Step 7 | Next | Firebase Auth + role/providerId güvenliği |
 
-Para kazandıracak ilk sürüm için kritik hedef: **Step 1–6**.
+Para kazandıracak ilk sürüm için kritik hedef olan **Step 1–6** MVP seviyesinde tamamlandı. Canlıya daha güvenli çıkmak için sıradaki kritik iş Step 7'dir.
 
 ---
 
@@ -73,6 +74,7 @@ arrivio-platform/
     provider-login-flow.md
     step-3-firestore-transfer.md
     step-5-admin-provider-assignment.md
+    step-6-provider-assigned-transfers.md
     claude-implementation-brief.md
   README.md
   ROADMAP.md
@@ -106,6 +108,15 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 `/transfers` Firestore'dan son transfer taleplerini listeler ve transfer sağlayıcıya atama yapar.
 
 `/providers` Firestore `providers` koleksiyonuna sağlayıcı oluşturur ve mevcut sağlayıcıları listeler.
+
+### Provider
+
+```text
+/
+/transfers?providerId=PROVIDER_DOC_ID
+```
+
+`/transfers?providerId=...` sadece ilgili provider'a atanmış transfer taleplerini listeler ve provider status güncellemesi yapar. Bu query parametreli yapı MVP test içindir; canlıda Firebase Auth + `users/{uid}.providerId` ile değiştirilecektir.
 
 ---
 
@@ -204,17 +215,14 @@ Kodlar komisyon takibi, sağlayıcı mutabakatı ve yolcu durum sorgulaması iç
 
 Sağlayıcı paneli sade olacak.
 
-İlk sürümde yeterli ekranlar:
+MVP testte:
 
-- Login
-- Dashboard
-- Yeni Talepler
-- Aktif İşler
-- Tamamlanan İşler
-- Komisyonlar
-- Profil / Belgeler
+- Provider ana ekranı var.
+- Provider document id ile atanmış transferleri görebilir.
+- Provider transfer status güncelleyebilir.
+- Auth hardening Step 7'de yapılacaktır.
 
-Sağlayıcı sadece `assignedProviderId` kendisine eşit olan talepleri görebilir.
+Canlı sürümde sağlayıcı sadece `assignedProviderId` kendisine eşit olan talepleri Firebase Auth + Firestore rules ile görebilir.
 
 ---
 
@@ -252,12 +260,13 @@ Detaylı kurallar için: [`docs/commission-rules.md`](./docs/commission-rules.md
 4. Transfer formu Firestore kaydı. Done
 5. Admin transfer talep listesi. Done / MVP
 6. Admin sağlayıcı oluşturma ve talep atama. Done / MVP
-7. Provider kendi atanmış talep listesi. Next
-8. Rent a car / otel / bilet formları.
-9. QR kaynak takibi.
-10. Komisyon takibi.
-11. Marka tasarımı, logo, landing UI.
-12. Mobil uygulama 2. faz.
+7. Provider kendi atanmış talep listesi. Done / MVP
+8. Firebase Auth + role/providerId güvenliği. Next
+9. Rent a car / otel / bilet formları.
+10. QR kaynak takibi.
+11. Komisyon takibi.
+12. Marka tasarımı, logo, landing UI.
+13. Mobil uygulama 2. faz.
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
 
