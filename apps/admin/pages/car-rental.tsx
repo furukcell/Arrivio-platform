@@ -1,10 +1,12 @@
 import { createElement, useEffect, useState } from "react";
-import { getAppUserByUid, listenToCurrentUser, listCarRentalRequests, logoutCurrentUser } from "@arrivio/firebase";
-import type { CarRentalRequest } from "@arrivio/shared";
+import { getAppUserByUid, listenToCurrentUser, listCarRentalRequests, logoutCurrentUser, updateCarRentalStatus } from "@arrivio/firebase";
+import type { CarRentalRequest, CarRentalStatus } from "@arrivio/shared";
 
 const pageStyle = { minHeight: "100vh", padding: "32px", fontFamily: "Arial, sans-serif", background: "#F8FAFC", color: "#08183A" };
 const cardStyle = { padding: "20px", borderRadius: "18px", background: "#FFFFFF", border: "1px solid #E5E7EB", marginBottom: "14px" };
 const buttonStyle = { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", marginRight: "8px" };
+const selectStyle = { width: "100%", padding: "12px", marginTop: "10px", marginBottom: "10px", border: "1px solid #D1D5DB", borderRadius: "12px" };
+const statusOptions: CarRentalStatus[] = ["new", "availability_checking", "provider_pending", "confirmed", "vehicle_delivered", "vehicle_returned", "completed", "cancelled"];
 
 function title(request: CarRentalRequest): string {
   return `${request.requestCode} - ${request.passengerName}`;
@@ -26,13 +28,14 @@ export default function AdminCarRentalPage() {
   const [status, setStatus] = useState("Checking admin session...");
   const [isAdmin, setIsAdmin] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
+  const [nextStatuses, setNextStatuses] = useState<Record<string, CarRentalStatus>>({});
+  const [savingId, setSavingId] = useState("");
 
   async function loadData() {
     if (!isAdmin) {
       setStatus("Admin login required.");
       return;
     }
-
     try {
       setStatus("Loading car rental requests...");
       const items = await listCarRentalRequests(50);
@@ -40,6 +43,20 @@ export default function AdminCarRentalPage() {
       setStatus(items.length ? "" : "No car rental requests yet.");
     } catch (error) {
       setStatus("Car rental requests could not be loaded.");
+    }
+  }
+
+  async function saveRequestStatus(request: CarRentalRequest) {
+    if (!isAdmin || !request.id) return;
+    setSavingId(request.id);
+    try {
+      await updateCarRentalStatus({ requestId: request.id, status: nextStatuses[request.id] || request.status });
+      await loadData();
+      setStatus(`Status saved for ${request.requestCode}.`);
+    } catch (error) {
+      setStatus("Car rental status could not be saved.");
+    } finally {
+      setSavingId("");
     }
   }
 
@@ -58,7 +75,6 @@ export default function AdminCarRentalPage() {
         setStatus("Please login as admin at /login.");
         return;
       }
-
       setAuthEmail(authUser.email || "");
       const profile = await getAppUserByUid(authUser.uid);
       const allowed = profile?.role === "admin";
@@ -67,13 +83,10 @@ export default function AdminCarRentalPage() {
         setStatus("This account is not an admin account.");
         return;
       }
-
-      setStatus("Admin session ready.");
       const items = await listCarRentalRequests(50);
       setRequests(items);
       setStatus(items.length ? "" : "No car rental requests yet.");
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -92,7 +105,13 @@ export default function AdminCarRentalPage() {
       createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Pickup: ${request.pickupDate}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Dropoff: ${request.dropoffDate}`),
-      createElement("p", { style: { margin: 0 } }, `Status: ${request.status}`)
+      createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
+      request.id ? createElement("div", null,
+        createElement("select", { style: selectStyle, value: nextStatuses[request.id] || request.status, onChange: (event) => setNextStatuses((current) => ({ ...current, [request.id || ""]: event.currentTarget.value as CarRentalStatus })) },
+          ...statusOptions.map((item) => createElement("option", { key: item, value: item }, item))
+        ),
+        createElement("button", { type: "button", onClick: () => saveRequestStatus(request), disabled: !isAdmin || savingId === request.id, style: buttonStyle }, savingId === request.id ? "Saving..." : "Save Status")
+      ) : null
     ))
   );
 }
