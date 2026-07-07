@@ -1,17 +1,19 @@
 import type { HotelRequest } from "@arrivio/shared";
+import type { WebLanguage } from "./supportModel";
 import type { HotelFormState } from "./hotelFormModel";
 
 export function mapHotelFormToRequest(
   state: HotelFormState,
   requestCode: string,
-  qrSourceId?: string
+  qrSourceId?: string,
+  languageOverride?: WebLanguage
 ): Omit<HotelRequest, "id" | "createdAt" | "updatedAt"> {
   return {
     type: "hotel",
     requestCode,
     passengerName: state.passengerName.trim(),
     passengerPhone: state.passengerPhone.trim(),
-    language: state.language,
+    language: languageOverride || state.language,
     airportCode: state.airportCode,
     flightCode: state.flightCode.trim() || undefined,
     qrSourceId,
