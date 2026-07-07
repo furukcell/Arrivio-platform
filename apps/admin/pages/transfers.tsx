@@ -6,9 +6,10 @@ import {
   listenToCurrentUser,
   listProviders,
   listTransferRequests,
-  logoutCurrentUser
+  logoutCurrentUser,
+  updateTransferCommission
 } from "@arrivio/firebase";
-import type { Provider, TransferRequest } from "@arrivio/shared";
+import type { CommissionStatus, Provider, TransferRequest } from "@arrivio/shared";
 import {
   formatProviderInfo,
   formatTransferMeta,
@@ -41,6 +42,15 @@ const selectStyle = {
   borderRadius: "12px"
 };
 
+const inputStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "8px",
+  marginBottom: "10px",
+  border: "1px solid #D1D5DB",
+  borderRadius: "12px"
+};
+
 export default function AdminTransferRequestsPage() {
   const [requests, setRequests] = useState<TransferRequest[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -49,6 +59,11 @@ export default function AdminTransferRequestsPage() {
   const [assigningId, setAssigningId] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
+  const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
+  const [commissionInputs, setCommissionInputs] = useState<Record<string, string>>({});
+  const [commissionStatuses, setCommissionStatuses] = useState<Record<string, CommissionStatus>>({});
+  const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [savingCommissionId, setSavingCommissionId] = useState("");
 
   async function loadData() {
     if (!isAdmin) {
@@ -103,8 +118,68 @@ export default function AdminTransferRequestsPage() {
     }
   }
 
+  async function saveCommission(request: TransferRequest) {
+    if (!isAdmin) {
+      setStatus("Admin login required.");
+      return;
+    }
+
+    if (!request.id) {
+      setStatus("Request id is missing.");
+      return;
+    }
+
+    const priceRaw = priceInputs[request.id] ?? (typeof request.estimatedTotalPrice === "number" ? String(request.estimatedTotalPrice) : "");
+    const commissionRaw = commissionInputs[request.id] ?? (typeof request.commissionAmount === "number" ? String(request.commissionAmount) : "");
+    const totalPrice = Number(priceRaw);
+    const commissionAmount = Number(commissionRaw);
+
+    if (!priceRaw || Number.isNaN(totalPrice) || totalPrice < 0) {
+      setStatus("Total price must be a valid number.");
+      return;
+    }
+
+    if (!commissionRaw || Number.isNaN(commissionAmount) || commissionAmount < 0) {
+      setStatus("Commission amount must be a valid number.");
+      return;
+    }
+
+    setSavingCommissionId(request.id);
+    try {
+      await updateTransferCommission({
+        requestId: request.id,
+        estimatedTotalPrice: totalPrice,
+        commissionAmount,
+        commissionStatus: commissionStatuses[request.id] || request.commissionStatus || "pending",
+        adminNote: adminNotes[request.id] ?? request.adminNote ?? ""
+      });
+      await loadData();
+      setStatus(`Commission saved for ${request.requestCode}.`);
+    } catch (error) {
+      setStatus("Commission could not be saved.");
+    } finally {
+      setSavingCommissionId("");
+    }
+  }
+
   function selectProvider(requestId: string, providerId: string) {
     setSelectedProviders((current) => ({ ...current, [requestId]: providerId }));
+  }
+
+  function setPrice(requestId: string, value: string) {
+    setPriceInputs((current) => ({ ...current, [requestId]: value }));
+  }
+
+  function setCommission(requestId: string, value: string) {
+    setCommissionInputs((current) => ({ ...current, [requestId]: value }));
+  }
+
+  function setCommissionStatusValue(requestId: string, value: CommissionStatus) {
+    setCommissionStatuses((current) => ({ ...current, [requestId]: value }));
+  }
+
+  function setAdminNote(requestId: string, value: string) {
+    setAdminNotes((current) => ({ ...current, [requestId]: value }));
   }
 
   async function logoutAdmin() {
@@ -182,6 +257,8 @@ export default function AdminTransferRequestsPage() {
         createElement("p", { style: { margin: "0 0 6px", color: "#4B5563" } }, formatTransferMeta(request)),
         createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
         createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
+        createElement("p", { style: { margin: "0 0 6px" } }, `Price: ${request.estimatedTotalPrice ?? "not set"} ${request.currency}`),
+        createElement("p", { style: { margin: "0 0 6px" } }, `Commission: ${request.commissionAmount ?? "not set"} ${request.currency} / ${request.commissionStatus}`),
         createElement("p", { style: { margin: "0 0 8px" } }, `Provider: ${formatProviderInfo(request)}`),
         createElement("select", {
           style: selectStyle,
@@ -195,8 +272,45 @@ export default function AdminTransferRequestsPage() {
           type: "button",
           onClick: () => assignProvider(request),
           disabled: assigningId === request.id || !isAdmin,
-          style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer" }
-        }, assigningId === request.id ? "Assigning..." : "Assign Provider")
+          style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", marginBottom: "14px" }
+        }, assigningId === request.id ? "Assigning..." : "Assign Provider"),
+        request.id ? createElement("section", { style: { marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #E5E7EB" } },
+          createElement("h3", { style: { margin: "0 0 8px" } }, "Commission Tracking"),
+          createElement("input", {
+            style: inputStyle,
+            value: priceInputs[request.id] ?? (typeof request.estimatedTotalPrice === "number" ? String(request.estimatedTotalPrice) : ""),
+            onChange: (event) => setPrice(request.id || "", event.currentTarget.value),
+            placeholder: "Total price"
+          }),
+          createElement("input", {
+            style: inputStyle,
+            value: commissionInputs[request.id] ?? (typeof request.commissionAmount === "number" ? String(request.commissionAmount) : ""),
+            onChange: (event) => setCommission(request.id || "", event.currentTarget.value),
+            placeholder: "Commission amount"
+          }),
+          createElement("select", {
+            style: selectStyle,
+            value: commissionStatuses[request.id] || request.commissionStatus || "pending",
+            onChange: (event) => setCommissionStatusValue(request.id || "", event.currentTarget.value as CommissionStatus)
+          },
+            createElement("option", { value: "pending" }, "Pending"),
+            createElement("option", { value: "invoiced" }, "Invoiced"),
+            createElement("option", { value: "paid" }, "Paid"),
+            createElement("option", { value: "cancelled" }, "Cancelled")
+          ),
+          createElement("input", {
+            style: inputStyle,
+            value: adminNotes[request.id] ?? request.adminNote ?? "",
+            onChange: (event) => setAdminNote(request.id || "", event.currentTarget.value),
+            placeholder: "Admin note"
+          }),
+          createElement("button", {
+            type: "button",
+            onClick: () => saveCommission(request),
+            disabled: savingCommissionId === request.id || !isAdmin,
+            style: { padding: "12px 16px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, cursor: "pointer" }
+          }, savingCommissionId === request.id ? "Saving..." : "Save Commission")
+        ) : null
       )
     )
   );
