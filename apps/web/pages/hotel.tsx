@@ -3,7 +3,8 @@ import { useRouter } from "next/router";
 import { createHotelRequest } from "@arrivio/firebase";
 import { createHotelRequestCode, initialHotelFormState, validateHotelForm, type HotelFormState } from "../src/hotelFormModel";
 import { mapHotelFormToRequest } from "../src/hotelRequestMapper";
-import { copy, getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
+import { getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
+import { hotelCopy } from "../src/webCopy";
 
 const pageStyle = { minHeight: "100vh", padding: "24px", fontFamily: "Arial, sans-serif", background: "#F7FBFF", color: "#08183A" };
 const cardStyle = { maxWidth: "720px", margin: "0 auto", padding: "24px", borderRadius: "24px", background: "#FFFFFF", boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)" };
@@ -19,6 +20,7 @@ function queryValue(rawValue: string | string[] | undefined): string {
 export default function HotelPage() {
   const router = useRouter();
   const language = getLanguage(router.query.lang);
+  const text = hotelCopy(language);
   const qrSourceId = queryValue(router.query.qrSourceId);
   const [form, setForm] = useState<HotelFormState>(initialHotelFormState);
   const [status, setStatus] = useState("");
@@ -38,11 +40,11 @@ export default function HotelPage() {
     setIsSubmitting(true);
     try {
       const code = createHotelRequestCode();
-      await createHotelRequest(mapHotelFormToRequest(form, code, qrSourceId || undefined));
+      await createHotelRequest(mapHotelFormToRequest(form, code, qrSourceId || undefined, language));
       setRequestCode(code);
-      setStatus(copy(language, "Otel talebiniz alindi. Arrivio size ulasacak.", "Hotel availability request created. Arrivio will contact you soon."));
+      setStatus(text.success);
     } catch (error) {
-      setStatus(copy(language, "Otel talebi olusturulamadi. Lutfen tekrar deneyin.", "Hotel request could not be created. Please try again."));
+      setStatus(text.failure);
     } finally {
       setIsSubmitting(false);
     }
@@ -50,35 +52,35 @@ export default function HotelPage() {
 
   return createElement("main", { style: pageStyle },
     createElement("section", { style: cardStyle },
-      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, copy(language, "Ana sayfa", "Home")),
-      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Milas-Bodrum Airport"),
-      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, copy(language, "Otel Uygunluk Talebi", "Request Hotel Availability")),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "18px" } }, copy(language, "Konaklama bilgilerinizi gonderin. Arrivio uygun otel ve apartlari kontrol etsin.", "Tell us your stay details. Arrivio will check suitable nearby hotels and apartments.")),
-      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700 } }, copy(language, "QR kaynagi algilandi.", "QR source detected.")) : null,
-      createElement("label", null, copy(language, "Yolcu adi", "Passenger name")),
-      createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: copy(language, "Ad soyad", "Full name") }),
-      createElement("label", null, copy(language, "Telefon / WhatsApp", "Phone / WhatsApp")),
+      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, text.home),
+      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, text.airport),
+      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, text.title),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "18px" } }, text.description),
+      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700 } }, text.qrDetected) : null,
+      createElement("label", null, text.passengerName),
+      createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: text.passengerPlaceholder }),
+      createElement("label", null, text.phone),
       createElement("input", { style: inputStyle, value: form.passengerPhone, onChange: (event) => updateField("passengerPhone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" }),
-      createElement("label", null, copy(language, "Ucus kodu", "Flight code")),
+      createElement("label", null, text.flightCode),
       createElement("input", { style: inputStyle, value: form.flightCode, onChange: (event) => updateField("flightCode", event.currentTarget.value), placeholder: "TK2524" }),
-      createElement("label", null, copy(language, "Giris tarihi", "Check-in date")),
+      createElement("label", null, text.checkIn),
       createElement("input", { style: inputStyle, type: "date", value: form.checkInDate, onChange: (event) => updateField("checkInDate", event.currentTarget.value) }),
-      createElement("label", null, copy(language, "Cikis tarihi", "Check-out date")),
+      createElement("label", null, text.checkOut),
       createElement("input", { style: inputStyle, type: "date", value: form.checkOutDate, onChange: (event) => updateField("checkOutDate", event.currentTarget.value) }),
-      createElement("label", null, copy(language, "Kisi sayisi", "Guests")),
+      createElement("label", null, text.guests),
       createElement("input", { style: inputStyle, type: "number", min: 1, value: form.guests, onChange: (event) => updateField("guests", Number(event.currentTarget.value)) }),
-      createElement("label", null, copy(language, "Oda sayisi", "Rooms")),
+      createElement("label", null, text.rooms),
       createElement("input", { style: inputStyle, type: "number", min: 1, value: form.rooms, onChange: (event) => updateField("rooms", Number(event.currentTarget.value)) }),
-      createElement("label", null, copy(language, "Arama yaricapi km", "Search radius km")),
+      createElement("label", null, text.radius),
       createElement("input", { style: inputStyle, type: "number", min: 1, value: form.radiusKm, onChange: (event) => updateField("radiusKm", Number(event.currentTarget.value)) }),
       createElement("label", null,
         createElement("input", { type: "checkbox", checked: form.wantsTransfer, onChange: (event) => updateField("wantsTransfer", event.currentTarget.checked), style: { marginRight: "8px" } }),
-        copy(language, "Havalimani transferi de isteyebilirim", "I may need airport transfer too")
+        text.wantsTransfer
       ),
-      createElement("button", { style: { ...buttonStyle, marginTop: "18px" }, type: "button", onClick: submitRequest, disabled: isSubmitting }, isSubmitting ? copy(language, "Gonderiliyor...", "Sending...") : copy(language, "Otel Talebi Gonder", "Request Hotel")),
-      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, copy(language, "WhatsApp Destek", "WhatsApp Support")),
+      createElement("button", { style: { ...buttonStyle, marginTop: "18px" }, type: "button", onClick: submitRequest, disabled: isSubmitting }, isSubmitting ? text.sending : text.submit),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, text.support),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
-      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${copy(language, "Talep kodu", "Request code")}: ${requestCode}`) : null
+      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${text.requestCode}: ${requestCode}`) : null
     )
   );
 }
