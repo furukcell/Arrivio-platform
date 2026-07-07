@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import type {
   TransferRequest,
   TransferStatus,
@@ -60,8 +60,19 @@ function leadStatusUpdate<TStatus extends string>(status: TStatus, adminNote?: s
   };
 }
 
+async function getRequestById<TRequest>(collectionName: string, requestId: string): Promise<TRequest | null> {
+  const requestRef = doc(firestoreDb, collectionName, requestId);
+  const snapshot = await getDoc(requestRef);
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...(snapshot.data() as TRequest) };
+}
+
 export async function createTransferRequest(payload: CreateTransferPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.transferRequests), withTimestamps(payload));
+}
+
+export async function getTransferRequest(requestId: string): Promise<TransferRequest | null> {
+  return getRequestById<TransferRequest>(COLLECTIONS.transferRequests, requestId);
 }
 
 export async function listTransferRequests(maxItems = 50): Promise<TransferRequest[]> {
@@ -118,6 +129,10 @@ export async function createCarRentalRequest(payload: CreateCarRentalPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.carRentalRequests), withTimestamps(payload));
 }
 
+export async function getCarRentalRequest(requestId: string): Promise<CarRentalRequest | null> {
+  return getRequestById<CarRentalRequest>(COLLECTIONS.carRentalRequests, requestId);
+}
+
 export async function listCarRentalRequests(maxItems = 50): Promise<CarRentalRequest[]> {
   const carRentalQuery = query(
     collection(firestoreDb, COLLECTIONS.carRentalRequests),
@@ -137,6 +152,10 @@ export async function createHotelRequest(payload: CreateHotelPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.hotelRequests), withTimestamps(payload));
 }
 
+export async function getHotelRequest(requestId: string): Promise<HotelRequest | null> {
+  return getRequestById<HotelRequest>(COLLECTIONS.hotelRequests, requestId);
+}
+
 export async function listHotelRequests(maxItems = 50): Promise<HotelRequest[]> {
   const hotelQuery = query(
     collection(firestoreDb, COLLECTIONS.hotelRequests),
@@ -154,6 +173,10 @@ export async function updateHotelStatus(payload: UpdateLeadStatusPayload<HotelSt
 
 export async function createTicketRequest(payload: CreateTicketPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.ticketRequests), withTimestamps(payload));
+}
+
+export async function getTicketRequest(requestId: string): Promise<TicketRequest | null> {
+  return getRequestById<TicketRequest>(COLLECTIONS.ticketRequests, requestId);
 }
 
 export async function listTicketRequests(maxItems = 50): Promise<TicketRequest[]> {
