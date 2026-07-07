@@ -36,10 +36,11 @@ export default function HomePage() {
     createElement("section", { style: cardStyle },
       createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Milas-Bodrum Airport"),
       createElement("h1", { style: { fontSize: "42px", margin: "0 0 12px" } }, "Arrivio"),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "Airport transfer, car rental and hotel availability requests without app download."),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "Airport transfer, car rental, hotel and ticket requests without app download."),
       createElement("a", { href: "/transfer", style: linkStyle }, "Request Transfer"),
       createElement("a", { href: "/car-rental", style: linkStyle }, "Request Car Rental"),
-      createElement("a", { href: "/hotel", style: linkStyle }, "Request Hotel")
+      createElement("a", { href: "/hotel", style: linkStyle }, "Request Hotel"),
+      createElement("a", { href: "/ticket", style: linkStyle }, "Request Ticket")
     )
   );
 }
