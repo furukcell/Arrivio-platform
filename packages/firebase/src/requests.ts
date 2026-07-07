@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, limit, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import type {
   TransferRequest,
   CarRentalRequest,
@@ -12,6 +12,12 @@ type CreateTransferPayload = Omit<TransferRequest, "id" | "createdAt" | "updated
 type CreateCarRentalPayload = Omit<CarRentalRequest, "id" | "createdAt" | "updatedAt">;
 type CreateHotelPayload = Omit<HotelRequest, "id" | "createdAt" | "updatedAt">;
 type CreateTicketPayload = Omit<TicketRequest, "id" | "createdAt" | "updatedAt">;
+
+export type AssignTransferProviderPayload = {
+  requestId: string;
+  providerId: string;
+  providerName: string;
+};
 
 function withTimestamps<T extends object>(payload: T) {
   return {
@@ -32,7 +38,17 @@ export async function listTransferRequests(maxItems = 50): Promise<TransferReque
     limit(maxItems)
   );
   const snapshot = await getDocs(transferQuery);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as TransferRequest) }));
+  return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as TransferRequest) }));
+}
+
+export async function assignTransferProvider(payload: AssignTransferProviderPayload) {
+  const transferRef = doc(firestoreDb, COLLECTIONS.transferRequests, payload.requestId);
+  return updateDoc(transferRef, {
+    assignedProviderId: payload.providerId,
+    providerName: payload.providerName,
+    status: "provider_pending",
+    updatedAt: serverTimestamp()
+  });
 }
 
 export async function createCarRentalRequest(payload: CreateCarRentalPayload) {
