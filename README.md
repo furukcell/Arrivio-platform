@@ -16,8 +16,8 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 2 | Done | Web transfer formu: `apps/web/pages/transfer.tsx` |
 | Step 3 | Done | Firestore transfer kayıt servisi: `packages/firebase/src/requests.ts` |
 | Step 4 | Done / MVP | Admin transfer listesi: `apps/admin/pages/transfers.tsx` |
-| Step 5 | Next | Admin sağlayıcı oluşturma ve talep atama |
-| Step 6 | Pending | Provider kendi atanmış taleplerini görür |
+| Step 5 | Done / MVP | Admin provider oluşturma ve transfer atama: `apps/admin/pages/providers.tsx` + `/transfers` |
+| Step 6 | Next | Provider kendi atanmış taleplerini görür |
 
 Para kazandıracak ilk sürüm için kritik hedef: **Step 1–6**.
 
@@ -47,7 +47,7 @@ MVP'nin amacı mükemmel uygulama çıkarmak değil, sezonda hızlıca gerçek t
 - Yolcu form doldurur, telefon girer, sistem talep kodu üretir.
 - Sağlayıcı hesabı olur ve Firebase Auth ile giriş yapar.
 - Sağlayıcı sadece kendisine atanan talepleri görür.
-- Sağlayıcı talebi kabul/reddeder ve durum günceller.
+- Sağlayıcı talebi kabul eder / reddeder ve durum günceller.
 - Admin panel tüm talepleri görür ve sağlayıcıya yönlendirir.
 - Admin gerektiğinde sağlayıcı adına düzeltme yapabilir.
 - Uçuş kodu alanı bulunur ama Flight API entegrasyonu zorunlu değildir.
@@ -72,6 +72,7 @@ arrivio-platform/
   docs/
     provider-login-flow.md
     step-3-firestore-transfer.md
+    step-5-admin-provider-assignment.md
     claude-implementation-brief.md
   README.md
   ROADMAP.md
@@ -99,9 +100,12 @@ Not: `packages/ui` yolu araç filtresine takıldığı için workspace paketi `p
 ```text
 /
 /transfers
+/providers
 ```
 
-`/transfers` Firestore'dan son transfer taleplerini listeler. Bu ekran Step 4 MVP ekranıdır.
+`/transfers` Firestore'dan son transfer taleplerini listeler ve transfer sağlayıcıya atama yapar.
+
+`/providers` Firestore `providers` koleksiyonuna sağlayıcı oluşturur ve mevcut sağlayıcıları listeler.
 
 ---
 
@@ -247,8 +251,8 @@ Detaylı kurallar için: [`docs/commission-rules.md`](./docs/commission-rules.md
 3. Transfer talep formu. Done
 4. Transfer formu Firestore kaydı. Done
 5. Admin transfer talep listesi. Done / MVP
-6. Admin sağlayıcı oluşturma ve talep atama. Next
-7. Provider kendi atanmış talep listesi.
+6. Admin sağlayıcı oluşturma ve talep atama. Done / MVP
+7. Provider kendi atanmış talep listesi. Next
 8. Rent a car / otel / bilet formları.
 9. QR kaynak takibi.
 10. Komisyon takibi.
