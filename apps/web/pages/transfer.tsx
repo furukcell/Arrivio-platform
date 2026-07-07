@@ -8,7 +8,8 @@ import {
   type TransferFormState
 } from "../src/transferFormModel";
 import { mapTransferFormToRequest } from "../src/transferRequestMapper";
-import { copy, getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
+import { getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
+import { transferCopy } from "../src/webCopy";
 
 const pageStyle = {
   minHeight: "100vh",
@@ -71,6 +72,7 @@ function getQueryValue(rawValue: string | string[] | undefined): string {
 export default function TransferPage() {
   const router = useRouter();
   const language = getLanguage(router.query.lang);
+  const text = transferCopy(language);
   const qrSourceId = getQueryValue(router.query.qrSourceId);
   const [form, setForm] = useState<TransferFormState>(initialTransferFormState);
   const [status, setStatus] = useState<string>("");
@@ -87,12 +89,12 @@ export default function TransferPage() {
     setIsSubmitting(true);
     try {
       const code = createTransferRequestCode();
-      const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined);
+      const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined, language);
       await createTransferRequest(payload);
       setRequestCode(code);
-      setStatus(copy(language, "Transfer talebiniz alindi. Arrivio size ulasacak.", "Transfer request created. Arrivio will contact you soon."));
+      setStatus(text.success);
     } catch (error) {
-      setStatus(copy(language, "Transfer talebi olusturulamadi. Lutfen tekrar deneyin.", "Transfer request could not be created. Please try again."));
+      setStatus(text.failure);
     } finally {
       setIsSubmitting(false);
     }
@@ -108,40 +110,40 @@ export default function TransferPage() {
     createElement(
       "section",
       { style: cardStyle },
-      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, copy(language, "Ana sayfa", "Home")),
-      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Milas-Bodrum Airport"),
-      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, copy(language, "Transfer Talebi", "Request Airport Transfer")),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, copy(language, "Uygulama indirmeden, yolcudan hizmet bedeli alinmadan transfer talebi birakin.", "No app download. No passenger service fee. Verified providers only.")),
-      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, copy(language, "QR kaynagi algilandi.", "QR source detected.")) : null,
-      createElement("label", null, copy(language, "Yolcu adi", "Passenger name")),
+      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, text.home),
+      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, text.airport),
+      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, text.title),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, text.description),
+      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, text.qrDetected) : null,
+      createElement("label", null, text.passengerName),
       createElement("input", {
         style: inputStyle,
         value: form.passengerName,
         onChange: (event) => updateField("passengerName", event.currentTarget.value),
-        placeholder: copy(language, "Ad soyad", "Full name")
+        placeholder: text.passengerPlaceholder
       }),
-      createElement("label", null, copy(language, "Telefon / WhatsApp", "Phone / WhatsApp")),
+      createElement("label", null, text.phone),
       createElement("input", {
         style: inputStyle,
         value: form.passengerPhone,
         onChange: (event) => updateField("passengerPhone", event.currentTarget.value),
         placeholder: "+90 5xx xxx xx xx"
       }),
-      createElement("label", null, copy(language, "Ucus kodu", "Flight code")),
+      createElement("label", null, text.flightCode),
       createElement("input", {
         style: inputStyle,
         value: form.flightCode,
         onChange: (event) => updateField("flightCode", event.currentTarget.value),
         placeholder: "TK2524"
       }),
-      createElement("label", null, copy(language, "Varis noktasi", "Destination")),
+      createElement("label", null, text.destination),
       createElement("input", {
         style: inputStyle,
         value: form.destination,
         onChange: (event) => updateField("destination", event.currentTarget.value),
         placeholder: "Bodrum Center, Yalikavak, Turgutreis..."
       }),
-      createElement("label", null, copy(language, "Yolcu sayisi", "Passengers")),
+      createElement("label", null, text.passengers),
       createElement("input", {
         style: inputStyle,
         type: "number",
@@ -149,7 +151,7 @@ export default function TransferPage() {
         value: form.passengers,
         onChange: (event) => updateField("passengers", Number(event.currentTarget.value))
       }),
-      createElement("label", null, copy(language, "Bagaj", "Bags")),
+      createElement("label", null, text.bags),
       createElement("input", {
         style: inputStyle,
         type: "number",
@@ -157,10 +159,10 @@ export default function TransferPage() {
         value: form.bags,
         onChange: (event) => updateField("bags", Number(event.currentTarget.value))
       }),
-      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? copy(language, "Gonderiliyor...", "Sending...") : copy(language, "Transfer Talebi Gonder", "Request Transfer")),
-      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, copy(language, "WhatsApp Destek", "WhatsApp Support")),
+      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? text.sending : text.submit),
+      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, text.support),
       status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
-      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${copy(language, "Talep kodu", "Request code")}: ${requestCode}`) : null
+      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${text.requestCode}: ${requestCode}`) : null
     )
   );
 }
