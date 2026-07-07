@@ -39,7 +39,7 @@ service cloud.firestore {
     }
 
     function providerTransferUpdateOnly() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "providerNote", "updatedAt"]);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "providerNote", "estimatedTotalPrice", "updatedAt"]);
     }
 
     function publicTransferCreateAllowed() {
