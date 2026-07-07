@@ -30,6 +30,13 @@ export type UpdateTransferStatusPayload = {
   providerNote?: string;
 };
 
+export type UpdateTransferProviderResponsePayload = {
+  requestId: string;
+  status: TransferStatus;
+  providerNote: string;
+  estimatedTotalPrice: number;
+};
+
 export type UpdateTransferCommissionPayload = {
   requestId: string;
   estimatedTotalPrice: number;
@@ -110,6 +117,16 @@ export async function updateTransferStatus(payload: UpdateTransferStatusPayload)
   return updateDoc(transferRef, {
     status: payload.status,
     providerNote: payload.providerNote || "",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function updateTransferProviderResponse(payload: UpdateTransferProviderResponsePayload) {
+  const transferRef = doc(firestoreDb, COLLECTIONS.transferRequests, payload.requestId);
+  return updateDoc(transferRef, {
+    status: payload.status,
+    providerNote: payload.providerNote,
+    estimatedTotalPrice: payload.estimatedTotalPrice,
     updatedAt: serverTimestamp()
   });
 }
