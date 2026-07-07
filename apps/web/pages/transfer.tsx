@@ -1,4 +1,5 @@
 import { createElement, useState } from "react";
+import { useRouter } from "next/router";
 import { createTransferRequest } from "@arrivio/firebase";
 import {
   createTransferRequestCode,
@@ -47,7 +48,14 @@ const buttonStyle = {
   cursor: "pointer"
 };
 
+function getQueryValue(rawValue: string | string[] | undefined): string {
+  if (Array.isArray(rawValue)) return rawValue[0] || "";
+  return rawValue || "";
+}
+
 export default function TransferPage() {
+  const router = useRouter();
+  const qrSourceId = getQueryValue(router.query.qrSourceId);
   const [form, setForm] = useState<TransferFormState>(initialTransferFormState);
   const [status, setStatus] = useState<string>("");
   const [requestCode, setRequestCode] = useState<string>("");
@@ -63,7 +71,7 @@ export default function TransferPage() {
     setIsSubmitting(true);
     try {
       const code = createTransferRequestCode();
-      const payload = mapTransferFormToRequest(form, code);
+      const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined);
       await createTransferRequest(payload);
       setRequestCode(code);
       setStatus("Transfer request created. Arrivio will contact you soon.");
@@ -86,7 +94,8 @@ export default function TransferPage() {
       { style: cardStyle },
       createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, "Milas-Bodrum Airport"),
       createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, "Request Airport Transfer"),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, "No app download. No passenger service fee. Verified providers only."),
+      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, "No app download. No passenger service fee. Verified providers only."),
+      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, "QR source detected.") : null,
       createElement("label", null, "Passenger name"),
       createElement("input", {
         style: inputStyle,
