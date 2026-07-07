@@ -29,8 +29,8 @@ export type UpdateTransferStatusPayload = {
 
 export type UpdateTransferCommissionPayload = {
   requestId: string;
-  estimatedTotalPrice?: number;
-  commissionAmount?: number;
+  estimatedTotalPrice: number;
+  commissionAmount: number;
   commissionStatus: CommissionStatus;
   adminNote?: string;
 };
@@ -81,7 +81,7 @@ export async function updateTransferStatus(payload: UpdateTransferStatusPayload)
   const transferRef = doc(firestoreDb, COLLECTIONS.transferRequests, payload.requestId);
   return updateDoc(transferRef, {
     status: payload.status,
-    providerNote: payload.providerNote,
+    providerNote: payload.providerNote || "",
     updatedAt: serverTimestamp()
   });
 }
@@ -92,7 +92,7 @@ export async function updateTransferCommission(payload: UpdateTransferCommission
     estimatedTotalPrice: payload.estimatedTotalPrice,
     commissionAmount: payload.commissionAmount,
     commissionStatus: payload.commissionStatus,
-    adminNote: payload.adminNote,
+    adminNote: payload.adminNote || "",
     updatedAt: serverTimestamp()
   });
 }
