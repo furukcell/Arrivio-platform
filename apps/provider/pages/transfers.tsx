@@ -1,7 +1,13 @@
 import { createElement, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { listTransferRequestsForProvider, updateTransferStatus } from "@arrivio/firebase";
-import type { TransferRequest, TransferStatus } from "@arrivio/shared";
+import {
+  getAppUserByUid,
+  listenToCurrentUser,
+  listTransferRequestsForProvider,
+  logoutCurrentUser,
+  updateTransferStatus
+} from "@arrivio/firebase";
+import type { AppUser, TransferRequest, TransferStatus } from "@arrivio/shared";
 import {
   formatContactLine,
   formatPassengerSummary,
@@ -9,6 +15,7 @@ import {
   getProviderIdFromQuery,
   isProviderActionable
 } from "../src/providerTransferModel";
+import { buildProviderSessionStatus, resolveProviderId } from "../src/providerSessionModel";
 
 const pageStyle = {
   minHeight: "100vh",
@@ -45,20 +52,24 @@ const secondaryButton = {
 
 export default function ProviderTransfersPage() {
   const router = useRouter();
-  const providerId = getProviderIdFromQuery(router.query.providerId);
+  const fallbackProviderId = getProviderIdFromQuery(router.query.providerId);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [providerId, setProviderId] = useState("");
   const [requests, setRequests] = useState<TransferRequest[]>([]);
-  const [status, setStatus] = useState("Enter providerId in the URL to load transfers.");
+  const [status, setStatus] = useState("Checking provider session...");
   const [updatingId, setUpdatingId] = useState("");
+  const [isSessionReady, setIsSessionReady] = useState(false);
 
-  async function loadTransfers() {
-    if (!providerId) {
-      setStatus("Missing providerId. Example: /transfers?providerId=PROVIDER_DOC_ID");
+  async function loadTransfers(activeProviderId = providerId) {
+    if (!activeProviderId) {
+      setStatus("Provider id is missing. Login or use temporary providerId query for local MVP test.");
       return;
     }
 
     try {
       setStatus("Loading assigned transfers...");
-      const items = await listTransferRequestsForProvider(providerId, 50);
+      const items = await listTransferRequestsForProvider(activeProviderId, 50);
       setRequests(items);
       setStatus(items.length ? "" : "No assigned transfer requests yet.");
     } catch (error) {
@@ -84,18 +95,49 @@ export default function ProviderTransfersPage() {
     }
   }
 
+  async function logoutProvider() {
+    await logoutCurrentUser();
+    setAppUser(null);
+    setAuthEmail("");
+    setProviderId("");
+    setRequests([]);
+    setStatus("Logged out.");
+  }
+
   useEffect(() => {
-    if (router.isReady) loadTransfers();
-  }, [router.isReady, providerId]);
+    const unsubscribe = listenToCurrentUser(async (authUser) => {
+      if (!authUser) {
+        setIsSessionReady(true);
+        setProviderId(fallbackProviderId);
+        setStatus(fallbackProviderId ? "Using temporary providerId query fallback." : "Please login as provider.");
+        if (fallbackProviderId) await loadTransfers(fallbackProviderId);
+        return;
+      }
+
+      setAuthEmail(authUser.email || "");
+      const profile = await getAppUserByUid(authUser.uid);
+      setAppUser(profile);
+      const resolvedProviderId = resolveProviderId(profile);
+      setProviderId(resolvedProviderId);
+      setIsSessionReady(true);
+      setStatus(buildProviderSessionStatus(profile));
+      if (resolvedProviderId) await loadTransfers(resolvedProviderId);
+    });
+
+    return () => unsubscribe();
+  }, [fallbackProviderId]);
 
   return createElement(
     "main",
     { style: pageStyle },
     createElement("h1", { style: { fontSize: "40px", margin: "0 0 8px" } }, "Provider Transfers"),
-    createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, "MVP view for transfer providers. Auth will replace providerId query in the next hardening step."),
+    createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, "ProviderId is now resolved from Firebase Auth profile. Query providerId is only a temporary MVP fallback."),
+    createElement("p", { style: { color: "#4B5563", marginBottom: "8px" } }, `Email: ${authEmail || "not logged in"}`),
     createElement("p", { style: { color: "#4B5563", marginBottom: "24px" } }, `Provider ID: ${providerId || "not set"}`),
-    createElement("button", { type: "button", onClick: loadTransfers, style: primaryButton }, "Refresh"),
+    createElement("button", { type: "button", onClick: () => loadTransfers(), disabled: !isSessionReady, style: primaryButton }, "Refresh"),
+    createElement("button", { type: "button", onClick: logoutProvider, style: { ...primaryButton, background: "#4B5563" } }, "Logout"),
     status ? createElement("p", { style: { fontWeight: 700 } }, status) : null,
+    !authEmail ? createElement("p", null, "Open /login to sign in as provider.") : null,
     ...requests.map((request) =>
       createElement("article", { key: request.id || request.requestCode, style: cardStyle },
         createElement("h2", { style: { margin: "0 0 8px", fontSize: "22px" } }, formatTransferTitle(request)),
