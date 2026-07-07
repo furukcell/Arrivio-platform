@@ -128,3 +128,13 @@ export async function listHotelRequests(maxItems = 50): Promise<HotelRequest[]> 
 export async function createTicketRequest(payload: CreateTicketPayload) {
   return addDoc(collection(firestoreDb, COLLECTIONS.ticketRequests), withTimestamps(payload));
 }
+
+export async function listTicketRequests(maxItems = 50): Promise<TicketRequest[]> {
+  const ticketQuery = query(
+    collection(firestoreDb, COLLECTIONS.ticketRequests),
+    orderBy("createdAt", "desc"),
+    limit(maxItems)
+  );
+  const snapshot = await getDocs(ticketQuery);
+  return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as TicketRequest) }));
+}
