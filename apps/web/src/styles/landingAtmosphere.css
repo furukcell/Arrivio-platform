@@ -1,0 +1,156 @@
+body {
+  background: #eef6ff;
+}
+
+main.page {
+  position: relative;
+  overflow-x: hidden;
+  background:
+    radial-gradient(900px 520px at 6% 4%, rgba(7, 94, 232, 0.18), transparent 62%),
+    radial-gradient(880px 520px at 92% 8%, rgba(24, 182, 255, 0.24), transparent 58%),
+    radial-gradient(760px 460px at 50% 42%, rgba(7, 94, 232, 0.08), transparent 65%),
+    linear-gradient(180deg, #f8fbff 0%, #eaf4ff 42%, #f7fbff 100%) !important;
+}
+
+main.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(7, 94, 232, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(7, 94, 232, 0.045) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.45), transparent 72%);
+  z-index: 0;
+}
+
+main.page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.topStrip {
+  background: linear-gradient(90deg, #061b58 0%, #075ee8 48%, #18b6ff 100%) !important;
+  box-shadow: 0 12px 36px rgba(7, 94, 232, 0.22);
+}
+
+.navbar {
+  box-shadow: 0 12px 38px rgba(7, 27, 58, 0.07) !important;
+}
+
+.hero {
+  margin-top: 24px !important;
+  margin-bottom: 10px !important;
+  padding: 48px 44px 42px !important;
+  border: 1px solid rgba(204, 226, 251, 0.85);
+  border-radius: 38px;
+  background:
+    radial-gradient(540px 320px at 72% 8%, rgba(24, 182, 255, 0.28), transparent 70%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(230, 243, 255, 0.78)) !important;
+  box-shadow: 0 34px 90px rgba(7, 27, 88, 0.13);
+}
+
+.heroBadge {
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 10px 28px rgba(7, 94, 232, 0.08);
+}
+
+.hero h1 {
+  color: #061334 !important;
+}
+
+.heroMockup {
+  background:
+    radial-gradient(300px 220px at 78% 4%, rgba(255,255,255,0.30), transparent 70%),
+    linear-gradient(150deg, #061b58 0%, #075ee8 58%, #7bd7ff 100%) !important;
+  box-shadow: 0 40px 100px rgba(7, 27, 88, 0.32) !important;
+}
+
+.requestPanel {
+  margin-top: 18px !important;
+  border: 1px solid rgba(198, 221, 248, 0.95) !important;
+  box-shadow:
+    0 28px 80px rgba(7, 27, 88, 0.14),
+    0 0 0 10px rgba(255, 255, 255, 0.45) !important;
+}
+
+.panelHead {
+  background:
+    radial-gradient(420px 160px at 92% 5%, rgba(24, 182, 255, 0.16), transparent 70%),
+    linear-gradient(90deg, #ffffff, #eef7ff) !important;
+}
+
+.tabs {
+  background: #eaf3ff !important;
+}
+
+.formGrid {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.field input {
+  background: #ffffff !important;
+  border-color: #c8d9ed !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 18px rgba(7, 27, 58, 0.04);
+}
+
+.submitBtn,
+.heroActions button,
+.rightNav button {
+  background: linear-gradient(135deg, #075ee8 0%, #0648c8 100%) !important;
+}
+
+.section.modules,
+.section.benefits,
+.section.process {
+  padding: 30px;
+  border-radius: 34px;
+  border: 1px solid rgba(202, 222, 247, 0.75);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 22px 70px rgba(7, 27, 88, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.moduleGrid button,
+.benefitGrid div,
+.stepGrid div {
+  border-color: rgba(194, 216, 244, 0.92) !important;
+  box-shadow: 0 18px 44px rgba(7, 27, 88, 0.07) !important;
+}
+
+.revenue {
+  box-shadow: 0 28px 80px rgba(7, 27, 88, 0.22) !important;
+}
+
+.footer {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 900px) {
+  main.page {
+    background:
+      radial-gradient(520px 360px at 4% 0%, rgba(7, 94, 232, 0.20), transparent 62%),
+      radial-gradient(460px 340px at 94% 8%, rgba(24, 182, 255, 0.22), transparent 62%),
+      linear-gradient(180deg, #f8fbff 0%, #eaf4ff 42%, #f7fbff 100%) !important;
+  }
+
+  .hero {
+    margin: 14px 14px 10px !important;
+    padding: 24px 18px 22px !important;
+    border-radius: 28px;
+  }
+
+  .requestPanel {
+    margin-top: 10px !important;
+    box-shadow: 0 24px 64px rgba(7, 27, 88, 0.12) !important;
+  }
+
+  .section.modules,
+  .section.benefits,
+  .section.process {
+    padding: 20px;
+    border-radius: 28px;
+  }
+}
