@@ -1,6 +1,6 @@
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import type { AppUser, UserRole } from "@arrivio/shared";
-import { firestoreDb } from "./client";
+import { getFirestoreDb } from "./client";
 import { COLLECTIONS } from "./collections";
 
 export type UpsertAppUserPayload = {
@@ -12,14 +12,14 @@ export type UpsertAppUserPayload = {
 };
 
 export async function getAppUserByUid(uid: string): Promise<AppUser | null> {
-  const userRef = doc(firestoreDb, COLLECTIONS.users, uid);
+  const userRef = doc(getFirestoreDb(), COLLECTIONS.users, uid);
   const snapshot = await getDoc(userRef);
   if (!snapshot.exists()) return null;
   return { id: snapshot.id, ...(snapshot.data() as AppUser) };
 }
 
 export async function upsertAppUser(payload: UpsertAppUserPayload) {
-  const userRef = doc(firestoreDb, COLLECTIONS.users, payload.uid);
+  const userRef = doc(getFirestoreDb(), COLLECTIONS.users, payload.uid);
   return setDoc(userRef, {
     ...payload,
     updatedAt: serverTimestamp()
