@@ -1,0 +1,10 @@
+[build]
+  command = "pnpm --filter @arrivio/web build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "18.18.0"
+  PNPM_VERSION = "9.0.0"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
