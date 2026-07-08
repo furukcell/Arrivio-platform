@@ -116,31 +116,23 @@ Provider panel `users/{uid}.providerId` değerini okuyarak sadece kendi transfer
 
 ## 6. Netlify Setup
 
-Netlify üzerinde repo bağlanırken app bazlı build ayarları gerekir.
-
-Web app için:
+Repo kökünde `netlify.toml` vardır. Netlify site ayarında root repo bağlandığında web app build ayarı buradan okunur.
 
 ```text
-Base directory: apps/web
-Build command: npm run build
-Publish directory: .next
+Build command: pnpm --filter @arrivio/web build
+Publish directory: apps/web/.next
+Node: 18.18.0
+PNPM: 9.0.0
 ```
 
-Admin ve provider ayrı deploy edilecekse:
+İlk canlı deploy web app içindir. Admin ve provider ayrı subdomain/site olarak deploy edilecekse ayrıca config açılmalıdır.
+
+Örnek:
 
 ```text
-Base directory: apps/admin
-Build command: npm run build
-Publish directory: .next
+admin.arrivio...
+provider.arrivio...
 ```
-
-```text
-Base directory: apps/provider
-Build command: npm run build
-Publish directory: .next
-```
-
-Monorepo ayarlarında paket yöneticisi ve workspace davranışı ayrıca kontrol edilmelidir.
 
 ---
 
