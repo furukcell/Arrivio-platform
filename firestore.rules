@@ -42,17 +42,52 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "providerNote", "estimatedTotalPrice", "updatedAt"]);
     }
 
-    function publicTransferCreateAllowed() {
-      return request.resource.data.type == "transfer"
+    function validPublicLanguage() {
+      return request.resource.data.language == "tr" || request.resource.data.language == "en";
+    }
+
+    function publicRequestBaseAllowed(expectedType) {
+      return request.resource.data.type == expectedType
         && request.resource.data.status == "new"
         && request.resource.data.commissionStatus == "pending"
+        && request.resource.data.currency == "TRY"
         && request.resource.data.requestCode is string
         && request.resource.data.passengerName is string
         && request.resource.data.passengerPhone is string
+        && request.resource.data.airportCode is string
+        && validPublicLanguage()
+        && !request.resource.data.keys().hasAny(["assignedProviderId", "providerName", "providerNote", "adminNote", "estimatedTotalPrice", "commissionAmount"]);
+    }
+
+    function publicTransferCreateAllowed() {
+      return publicRequestBaseAllowed("transfer")
         && request.resource.data.destination is string
         && request.resource.data.passengers is int
-        && request.resource.data.passengers >= 1
-        && !request.resource.data.keys().hasAny(["assignedProviderId", "providerName", "providerNote", "adminNote", "estimatedTotalPrice", "commissionAmount"]);
+        && request.resource.data.passengers >= 1;
+    }
+
+    function publicCarRentalCreateAllowed() {
+      return publicRequestBaseAllowed("carRental")
+        && request.resource.data.pickupLocation is string
+        && request.resource.data.pickupDate is string
+        && request.resource.data.dropoffDate is string;
+    }
+
+    function publicHotelCreateAllowed() {
+      return publicRequestBaseAllowed("hotel")
+        && request.resource.data.checkInDate is string
+        && request.resource.data.checkOutDate is string
+        && request.resource.data.guests is int
+        && request.resource.data.guests >= 1;
+    }
+
+    function publicTicketCreateAllowed() {
+      return publicRequestBaseAllowed("ticket")
+        && request.resource.data.fromAirportOrCity is string
+        && request.resource.data.toAirportOrCity is string
+        && request.resource.data.departureDate is string
+        && request.resource.data.passengers is int
+        && request.resource.data.passengers >= 1;
     }
 
     match /users/{userId} {
@@ -73,15 +108,18 @@ service cloud.firestore {
     }
 
     match /carRentalRequests/{requestId} {
-      allow read, write: if isAdmin();
+      allow create: if publicCarRentalCreateAllowed() || isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     match /hotelRequests/{requestId} {
-      allow read, write: if isAdmin();
+      allow create: if publicHotelCreateAllowed() || isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     match /ticketRequests/{requestId} {
-      allow read, write: if isAdmin();
+      allow create: if publicTicketCreateAllowed() || isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     match /qrSources/{sourceId} {
