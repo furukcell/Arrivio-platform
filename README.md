@@ -33,11 +33,14 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 19 | Done / MVP | Provider WhatsApp, fiyat/not ve aktif/tamamlanan iş ayrımı eklendi. |
 | Step 20 | Done / MVP | Web formları merkezi `webCopy.ts` üzerinden tam TR/EN metin, hata, başarı ve talep kodu mesajlarıyla genişletildi. |
 | Step 21 | Done / Partial | Firebase Production projesi açıldı, Auth/Firestore/rules/admin user hazırlandı, Netlify web deploy ayarı yapıldı ve web canlı deploy alındı. |
-| Step 22 | Pending | Mobil MVP. |
+| Step 22 | Current | Canlı web UI iyileştirme, landing component mimarisi ve gerçek talep smoke test. |
+| Step 23 | Next Big Feature | Transfer pazaryeri: açık iş havuzu, puan bazlı bildirim dalgaları, ilk onaylayan işi alır. |
+| Step 24 | Pending | Admin/provider ayrı deploy veya subdomain. |
+| Step 25 | Pending | Mobil MVP. |
 
 Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/EN destekli çalışır; Türkçe karakterli metinler merkezi `apps/web/src/webCopy.ts` dosyasından yönetilir; transfer, rent a car, otel ve bilet talebi toplanabilir; admin panel talepleri yönetir; provider kendi işlerinde müşteriye WhatsApp'tan geçebilir ve fiyat/not girebilir.
 
-Canlı bağlantı tarafında Firebase Production projesi oluşturuldu. Firestore ve Email/Password Auth aktif edildi. İlk admin `users/{uid}` dokümanı oluşturuldu. Firestore rules Console'a yayınlandı. Netlify web deploy tamamlandı. İlk canlı görünüm sonrası web ana sayfası daha modern mobil landing sayfası olacak şekilde yeniden tasarlandı.
+Canlı bağlantı tarafında Firebase Production projesi oluşturuldu. Firestore ve Email/Password Auth aktif edildi. İlk admin `users/{uid}` dokümanı oluşturuldu. Firestore rules Console'a yayınlandı. Netlify web deploy tamamlandı. İlk canlı görünüm sonrası web ana sayfası modern landing mantığına taşındı ve componentlere bölündü.
 
 ---
 
@@ -125,12 +128,24 @@ Bu key frontend'de görünmesi beklenen Firebase Web API key'dir. Güvenlik Fire
 /qr/[slug]
 ```
 
-- `/` ana sayfa mobil landing olarak tasarlandı; TR/EN geçişi, servis kartları ve WhatsApp destek vardır.
+- `/` ana sayfa modern landing olarak tasarlandı; TR/EN geçişi, servis kartları, sekmeli talep paneli ve WhatsApp destek vardır.
 - `/transfer?lang=tr` veya `/transfer?lang=en` yolcu transfer talebi toplar.
 - `/car-rental?lang=tr` veya `/car-rental?lang=en` araç kiralama talebi toplar.
 - `/hotel?lang=tr` veya `/hotel?lang=en` otel uygunluk talebi toplar.
 - `/ticket?lang=tr` veya `/ticket?lang=en` bilet talebi toplar.
 - `/qr/[slug]?lang=tr` veya `/qr/[slug]?lang=en` QR source event kaydeder ve seçili dili transfer formuna taşır.
+
+### Web Landing Yapısı
+
+- `apps/web/pages/index.tsx` ana sayfa state ve Firebase submit akışını yönetir.
+- `apps/web/src/landingContent.ts` Türkçe/İngilizce landing metinlerini ve landing tiplerini içerir.
+- `apps/web/src/components/LandingNav.tsx` üst bant ve menüyü yönetir.
+- `apps/web/src/components/LandingHero.tsx` hero ve sağ mockup alanını yönetir.
+- `apps/web/src/components/RequestPanel.tsx` sekmeli transfer/araç/otel/bilet talep panelini yönetir.
+- `apps/web/src/components/MarketingSections.tsx` modül, avantaj, süreç ve gelir modeli bölümlerini yönetir.
+- `apps/web/src/components/LandingFooter.tsx` footer alanını yönetir.
+- `apps/web/src/styles/landingAtmosphere.css` ana landing CSS dosyasıdır.
+- `apps/web/src/styles/landingTurquoiseCards.css` turkuaz kart/section görsel iyileştirmelerini içerir.
 
 ### Web Dil Sistemi
 
@@ -237,6 +252,251 @@ displayName?: string
 10. TR/EN Web Dil Desteği
 11. Firebase Production Bağlantısı
 12. Netlify Web Deploy
+13. Modern Landing UI
+14. Transfer Pazaryeri / Açık İş Havuzu
+15. Provider Puanlama ve Bildirim Dalgaları
+
+---
+
+## Next Big Feature: Transfer Pazaryeri ve Otomatik Eşleşme
+
+Bu bölüm Arrivio'nun form sitesi olmaktan çıkıp gerçek bir havalimanı transfer pazaryerine dönüşmesi için yapılacak ana geliştirmedir.
+
+### Temel fikir
+
+```text
+Yolcu transfer isteği oluşturur
+↓
+Sistem uygun sağlayıcı/şoförleri bulur
+↓
+İş önce en yüksek puanlı gruba bildirilir
+↓
+İlk onaylayan işi alır
+↓
+İş transaction ile o sağlayıcıya kilitlenir
+↓
+Yolcu ve sağlayıcı telefonları açılır
+↓
+Komisyon pending olarak yazılır
+↓
+İş tamamlanınca komisyon kesinleşir
+```
+
+### Anlık transfer ve rezervasyon
+
+Sistem sadece o an havalimanında olan yolcu için değil, önceden rezervasyon için de çalışmalıdır.
+
+```text
+Anlık transfer:
+Bugün / birkaç saat içinde BJV çıkışlı transfer.
+
+Rezervasyon:
+Yolcu İstanbul'dayken 2 gün sonraki Bodrum uçuşu için transfer ayarlayabilir.
+```
+
+Her iki durumda da iş sağlayıcı havuzuna düşer. Yolcu uçuş tarihi, uçuş saati, uçuş kodu, rota, kişi sayısı ve araç tipi seçer.
+
+### Form yerine seçim odaklı akış
+
+İlk ekran uzun form olmamalı. Önce seçim yaptırılmalı:
+
+```text
+Nereye gidiyorsun?
+Ne zaman?
+Kaç kişi?
+Araç tipi ne?
+```
+
+Sonra sistem tahmini fiyat/araç kartı gösterir. Yolcu kartı seçince sadece son adımda şu bilgiler alınır:
+
+```text
+Ad soyad
+Telefon
+Uçuş kodu / geliş saati
+```
+
+### Provider/şoför bildirim dalgaları
+
+Sistemde 100 şoför/sağlayıcı varsa iş herkese aynı anda gitmemeli. Önce en güvenilir ve yüksek puanlılara gitmeli.
+
+Örnek dalga modeli:
+
+```text
+0. dakika:
+En yüksek puanlı ilk 10 sağlayıcıya bildirim gider.
+
+5. dakika:
+İş alınmadıysa sonraki 40 sağlayıcıya açılır.
+
+10. dakika:
+Hâlâ alınmadıysa kalan 50 sağlayıcıya açılır.
+```
+
+Bu model kaliteli sağlayıcıları ödüllendirir. İşi sürekli alan, iptal etmeyen ve müşteriyi mağdur etmeyen sağlayıcılar yeni işleri önce görür.
+
+### İlk onaylayan işi alır
+
+İş açıkken birden fazla sağlayıcı görebilir ama sadece ilk onaylayan işi almalıdır.
+
+Teknik kural:
+
+```text
+Provider "İşi Al" butonuna basar
+↓
+Firestore transaction çalışır
+↓
+Sistem request status hâlâ open mı kontrol eder
+↓
+Open ise provider atanır ve iş kilitlenir
+↓
+Open değilse "Bu iş başka sağlayıcı tarafından alındı" döner
+```
+
+Bu akış race condition riskini azaltır. Normal update ile yapılmamalı; transaction kullanılmalıdır.
+
+### Telefon gizleme kuralı
+
+Yolcu telefonu iş alınmadan görünmemelidir.
+
+```text
+İş açıkken:
++90 5xx *** ** 42
+
+İş alındıktan sonra:
++90 5xx xxx xx xx
+```
+
+Bu kural sistemi bypass etmeyi azaltır. Sağlayıcı işi almadan yolcuyla doğrudan bağlantı kuramaz.
+
+### Komisyon kuralı
+
+İş alındığı anda komisyon pending oluşmalıdır.
+
+```text
+Transfer fiyatı: 2.700 TL
+Komisyon oranı: %15
+Arrivio komisyonu: 405 TL
+Durum: pending
+```
+
+İş tamamlanınca komisyon kesinleşir. İş iptal edilirse iptal hakkı ve admin inceleme kuralları devreye girer.
+
+### İptal hakkı ve kötüye kullanım önleme
+
+Sağlayıcı işi alıp sonra sürekli "anlaşamadım" diyememelidir.
+
+Önerilen kural:
+
+```text
+Her sağlayıcıya ayda 1 ücretsiz iptal hakkı verilir.
+```
+
+Ayda 1 hakkını kullandıktan sonra tekrar işi alıp bırakırsa:
+
+```text
+Öncelik puanı düşer
+Yeni işleri daha geç görür
+Admin incelemesine düşer
+Gerekirse komisyon borcu kalır veya ceza uygulanır
+```
+
+Gerçek istisnalar için admin müdahalesi gerekir:
+
+```text
+Yolcu yanlış numara yazdı
+Uçuş iptal oldu
+Yolcu cevap vermedi
+Mücbir sebep oluştu
+```
+
+### Provider puanlama sistemi
+
+Her provider/şoför 100 puanla başlar. Sistem bu puana göre bildirim sırasını belirler.
+
+Önerilen puanlama:
+
+```text
+Başlangıç puanı: 100
+İşi tamamladı: +2
+Hızlı dönüş yaptı: +1
+Yolcu memnuniyeti yüksek: +3
+İşi alıp iptal etti: -10
+Yolcu şikâyeti: -20
+Admin güven düşürdü: manuel eksi puan
+```
+
+Bu puan sadece görünür yıldız değildir; operasyon sıralamasını belirleyen gerçek algoritma olmalıdır.
+
+### Gerekli veri modeli genişletmeleri
+
+Provider dokümanına eklenecek alanlar:
+
+```text
+serviceAreas: string[]
+vehicleTypes: string[]
+whatsappPhone: string
+commissionRate: number
+score: number
+monthlyCancelAllowance: number
+lastCancelAllowanceMonth: string
+isActive: boolean
+isVerified: boolean
+priorityGroup?: number
+```
+
+Transfer request dokümanına eklenecek alanlar:
+
+```text
+routeFrom: string
+routeTo: string
+vehicleType: string
+pickupDate: string
+pickupTime: string
+flightCode?: string
+estimatedPrice: number
+broadcastStatus: open | accepted | expired | cancelled
+broadcastWave: 1 | 2 | 3
+broadcastOpenedAt: timestamp
+nextWaveAt: timestamp
+acceptedProviderId?: string
+acceptedAt?: timestamp
+commissionRate: number
+commissionAmount: number
+commissionStatus: pending | invoiced | paid | cancelled
+```
+
+Broadcast event dokümanı:
+
+```text
+requestId: string
+providerId: string
+wave: number
+sentAt: timestamp
+seenAt?: timestamp
+acceptedAt?: timestamp
+status: sent | seen | accepted | missed | expired
+```
+
+### MVP yapım sırası
+
+```text
+1. Transfer talebine rota, tarih/saat, araç tipi ve tahmini fiyat ekle.
+2. Admin panelde rota/fiyat/araç tipi yönetimi oluştur.
+3. Provider modeline hizmet bölgeleri, araç tipleri, WhatsApp, komisyon oranı ve score ekle.
+4. Provider paneline "Açık İşler" ekranı ekle.
+5. İş açıkken telefonu maskele.
+6. İlk onaylayan alır transaction fonksiyonu yaz.
+7. İş alınınca telefonları aç.
+8. Komisyonu pending olarak otomatik oluştur.
+9. Aylık 1 iptal hakkı ekle.
+10. Provider puanlama sistemini ekle.
+11. 5 dakikalık bildirim dalgalarını ekle.
+12. Admin panelde broadcast ve iptal inceleme ekranı ekle.
+```
+
+### Ürün değeri
+
+Bu modelle Arrivio sadece talep formu olmaz. Havalimanı transfer işlerini gerçek zamanlı sağlayıcı havuzuna dağıtan, ilk onaylayan sağlayıcıya işi kilitleyen, telefonları iş alındıktan sonra açan ve komisyonu otomatik hesaplayan bir operasyon platformuna dönüşür.
 
 ---
 
@@ -263,7 +523,10 @@ displayName?: string
 19. Full web TR/EN language cleanup. Done / MVP
 20. Firebase canlı kurulum + Netlify web deploy. Done / Partial
 21. Canlı web UI iyileştirme ve gerçek talep smoke test. Current
-22. Admin/provider ayrı deploy veya subdomain. Pending
-23. Mobil uygulama. Pending
+22. Transfer pazaryeri / açık iş havuzu. Next
+23. Provider puanlama ve 5 dakikalık bildirim dalgaları. Next
+24. İlk onaylayan işi alır transaction sistemi. Next
+25. Admin/provider ayrı deploy veya subdomain. Pending
+26. Mobil uygulama. Pending
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
