@@ -2,7 +2,7 @@
 
 **Airport Transfer • Car Rental • Nearby Hotels • Flight Requests**
 
-Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıdır. İlk hedef ürün, uygulama beklemeden yayına alınacak mobil web/PWA, sağlayıcı paneli ve operasyonu yönetecek admin panelidir.
+Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıdır. İlk hedef ürün mobil web/PWA'dır; yolcu uygulama indirmeden transfer, araç kiralama, otel ve bilet talebi bırakır. Operasyon admin panelden yönetilir, transfer sağlayıcıları ise provider panelden kendilerine atanmış işleri takip eder.
 
 İlk pazar: **Milas-Bodrum Havalimanı (BJV)**
 
@@ -19,7 +19,7 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 5 | Done / MVP | Admin provider oluşturma ve transfer atama eklendi. |
 | Step 6 | Done / MVP | Provider kendi atanmış transferlerini görür ve status günceller. |
 | Step 7 | Done / Partial | Provider login ve `users/{uid}.providerId` okuma eklendi. |
-| Step 8 | Done / Draft | Firestore rules draft repoya eklendi. |
+| Step 8 | Done | Firestore rules canlı public/admin/provider akışına göre güncellendi. |
 | Step 9 | Done / Partial | Admin login ve admin guard eklendi. |
 | Step 10 | Done / MVP | Provider query fallback kaldırıldı ve provider Auth UID bağlama eklendi. |
 | Step 11 | Done / MVP | Transfer komisyon takibi eklendi. |
@@ -32,10 +32,12 @@ Arrivio, havalimanına gelen yolcular için TR/EN destekli yolcu hizmet pazarıd
 | Step 18 | Done / Partial | Ana sayfada TR/EN başlangıcı ve formlarda WhatsApp destek eklendi. |
 | Step 19 | Done / MVP | Provider WhatsApp, fiyat/not ve aktif/tamamlanan iş ayrımı eklendi. |
 | Step 20 | Done / MVP | Web formları merkezi `webCopy.ts` üzerinden tam TR/EN metin, hata, başarı ve talep kodu mesajlarıyla genişletildi. |
-| Step 21 | Next | Firebase canlı kurulum, env, users, rules ve build/typecheck. |
+| Step 21 | Done / Partial | Firebase Production projesi açıldı, Auth/Firestore/rules/admin user hazırlandı, Netlify web deploy ayarı yapıldı ve web canlı deploy alındı. |
 | Step 22 | Pending | Mobil MVP. |
 
 Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/EN destekli çalışır; Türkçe karakterli metinler merkezi `apps/web/src/webCopy.ts` dosyasından yönetilir; transfer, rent a car, otel ve bilet talebi toplanabilir; admin panel talepleri yönetir; provider kendi işlerinde müşteriye WhatsApp'tan geçebilir ve fiyat/not girebilir.
+
+Canlı bağlantı tarafında Firebase Production projesi oluşturuldu. Firestore ve Email/Password Auth aktif edildi. İlk admin `users/{uid}` dokümanı oluşturuldu. Firestore rules Console'a yayınlandı. Netlify web deploy tamamlandı. İlk canlı görünüm sonrası web ana sayfası daha modern mobil landing sayfası olacak şekilde yeniden tasarlandı.
 
 ---
 
@@ -44,7 +46,7 @@ Mobilden önceki web/admin/provider MVP omurgası tamamlandı. Web formları TR/
 - Yolcu Arrivio'ya ödeme yapmaz.
 - Yolcu transfer, rent a car, otel veya bilet hizmetini sağlayıcı/acente üzerinden alır.
 - Arrivio komisyonu iş gerçekleştiğinde hizmet sağlayıcıdan veya acenteden alır.
-- Transfer tarafında sadece belge kontrolünden geçmiş sağlayıcılar listelenir.
+- Transfer tarafında sadece belge kontrolünden geçmiş sağlayıcılarla çalışılması hedeflenir.
 - İlk canlı ürün mobil web/PWA'dır. Play Store / App Store süreci beklenmez.
 - Online ödeme, WhatsApp API ve Flight API ilk MVP'de yoktur.
 - WhatsApp destek ve provider-yolcu geçişi normal `wa.me` linkidir; API entegrasyonu değildir.
@@ -59,7 +61,7 @@ arrivio-platform/
     web/        -> Next.js mobil web / PWA / landing / QR sayfaları
     admin/      -> Next.js admin panel
     provider/   -> Next.js sağlayıcı paneli
-    mobile/     -> Expo React Native mobil uygulama
+    mobile/     -> Expo React Native mobil uygulama placeholder
   packages/
     shared/     -> type'lar, status listeleri, sabitler, yardımcı fonksiyonlar
     firebase/   -> firebase client, firestore servisleri, auth servisleri
@@ -81,9 +83,32 @@ arrivio-platform/
     step-18-web-language-support.md
     step-19-provider-panel-strengthening.md
     step-20-full-web-language-cleanup.md
+    step-21-live-firebase-setup.md
+  firestore.rules
+  firebase.json
+  netlify.toml
   README.md
   ROADMAP.md
 ```
+
+---
+
+## Canlı Web / Netlify
+
+Netlify root config:
+
+```text
+Build command: pnpm --filter @arrivio/web build
+Publish directory: apps/web/.next
+```
+
+`netlify.toml` içinde Next.js plugin, Node/PNPM versiyonları ve public Firebase web key için Netlify secret scan istisnası bulunur.
+
+```text
+SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_FIREBASE_WEB_KEY"
+```
+
+Bu key frontend'de görünmesi beklenen Firebase Web API key'dir. Güvenlik Firestore rules ile sağlanır.
 
 ---
 
@@ -100,7 +125,7 @@ arrivio-platform/
 /qr/[slug]
 ```
 
-- `/` ana sayfada servis aksiyonları, TR/EN linkleri ve WhatsApp destek vardır.
+- `/` ana sayfa mobil landing olarak tasarlandı; TR/EN geçişi, servis kartları ve WhatsApp destek vardır.
 - `/transfer?lang=tr` veya `/transfer?lang=en` yolcu transfer talebi toplar.
 - `/car-rental?lang=tr` veya `/car-rental?lang=en` araç kiralama talebi toplar.
 - `/hotel?lang=tr` veya `/hotel?lang=en` otel uygunluk talebi toplar.
@@ -160,7 +185,7 @@ arrivio-platform/
 
 ## Firebase Env
 
-Local geliştirmede `.env.local` içine şu değerler gerekir:
+Local geliştirmede ve Netlify Environment Variables içinde şu değerler gerekir:
 
 ```text
 NEXT_PUBLIC_FIREBASE_WEB_KEY=
@@ -169,6 +194,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_DEFAULT_AIRPORT=BJV
 NEXT_PUBLIC_WHATSAPP_SUPPORT_NUMBER=
 ```
 
@@ -209,6 +235,8 @@ displayName?: string
 8. Admin Komisyon Takibi
 9. WhatsApp Destek Linki
 10. TR/EN Web Dil Desteği
+11. Firebase Production Bağlantısı
+12. Netlify Web Deploy
 
 ---
 
@@ -222,7 +250,7 @@ displayName?: string
 6. Admin sağlayıcı oluşturma ve talep atama. Done / MVP
 7. Provider kendi atanmış talep listesi. Done / MVP
 8. Firebase Auth + role/providerId güvenliği. Done / Partial
-9. Firestore rules + admin guard + query fallback kaldırma. Done / Draft
+9. Firestore rules + admin guard + query fallback kaldırma. Done
 10. QR kaynak takibi. Done / MVP
 11. Komisyon takibi. Done / MVP
 12. Rent a car formu. Done / MVP
@@ -233,7 +261,9 @@ displayName?: string
 17. Web TR/EN + WhatsApp destek. Done / Partial
 18. Provider panel güçlendirme. Done / MVP
 19. Full web TR/EN language cleanup. Done / MVP
-20. Firebase canlı kurulum + build/typecheck. Next
-21. Mobil uygulama. Pending
+20. Firebase canlı kurulum + Netlify web deploy. Done / Partial
+21. Canlı web UI iyileştirme ve gerçek talep smoke test. Current
+22. Admin/provider ayrı deploy veya subdomain. Pending
+23. Mobil uygulama. Pending
 
 Detaylı adımlar için: [`ROADMAP.md`](./ROADMAP.md)
