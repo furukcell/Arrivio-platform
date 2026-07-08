@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "18.18.0"
   PNPM_VERSION = "9.0.0"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_FIREBASE_WEB_KEY"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
