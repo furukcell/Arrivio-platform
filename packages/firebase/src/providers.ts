@@ -1,6 +1,6 @@
 import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
 import type { Provider, ProviderType } from "@arrivio/shared";
-import { firestoreDb } from "./client";
+import { getFirestoreDb } from "./client";
 import { COLLECTIONS } from "./collections";
 
 export type CreateProviderPayload = {
@@ -13,7 +13,7 @@ export type CreateProviderPayload = {
 };
 
 export async function createProvider(payload: CreateProviderPayload) {
-  return addDoc(collection(firestoreDb, COLLECTIONS.providers), {
+  return addDoc(collection(getFirestoreDb(), COLLECTIONS.providers), {
     ...payload,
     isVerified: false,
     isActive: true,
@@ -23,7 +23,7 @@ export async function createProvider(payload: CreateProviderPayload) {
 }
 
 export async function listProviders(): Promise<Provider[]> {
-  const providerQuery = query(collection(firestoreDb, COLLECTIONS.providers), orderBy("name", "asc"));
+  const providerQuery = query(collection(getFirestoreDb(), COLLECTIONS.providers), orderBy("name", "asc"));
   const snapshot = await getDocs(providerQuery);
   return snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Provider) }));
 }
