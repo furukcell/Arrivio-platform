@@ -1,4 +1,4 @@
-import type { HotelRequest } from "@arrivio/shared";
+import type { HotelNightlyPrice, HotelRequest } from "@arrivio/shared";
 import type { WebLanguage } from "./supportModel";
 import { estimateHotelNightlyPrice, getHotelPriceSummary, type HotelFormState } from "./hotelFormModel";
 
@@ -6,9 +6,10 @@ export function mapHotelFormToRequest(
   state: HotelFormState,
   requestCode: string,
   qrSourceId?: string,
-  languageOverride?: WebLanguage
+  languageOverride?: WebLanguage,
+  nightlyPrices?: HotelNightlyPrice[]
 ): Omit<HotelRequest, "id" | "createdAt" | "updatedAt"> {
-  const priceSummary = getHotelPriceSummary(state);
+  const priceSummary = getHotelPriceSummary(state, nightlyPrices);
   const estimatedNightlyPrice = priceSummary?.minNightlyPrice ?? estimateHotelNightlyPrice(state);
   const nightCount = priceSummary?.nightCount ?? 1;
 
