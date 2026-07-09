@@ -1,5 +1,6 @@
 import { generateRequestCode } from "@arrivio/shared";
 
+export type TransferDirection = "from_airport" | "to_airport";
 export type TransferVehicleClass = "economic" | "vip" | "minibus" | "luxury";
 
 export type TransferFormState = {
@@ -8,6 +9,7 @@ export type TransferFormState = {
   language: "tr" | "en";
   airportCode: string;
   flightCode: string;
+  transferDirection: TransferDirection;
   destination: string;
   passengers: number;
   bags: number;
@@ -24,6 +26,11 @@ export type TransferDestinationOption = {
   enLabel: string;
   prices: PriceMap;
 };
+
+export const TRANSFER_DIRECTION_OPTIONS: Array<{ value: TransferDirection; trLabel: string; enLabel: string }> = [
+  { value: "from_airport", trLabel: "Havalimanından bölgeye", enLabel: "Airport to destination" },
+  { value: "to_airport", trLabel: "Bölgeden havalimanına", enLabel: "Destination to airport" }
+];
 
 export const TRANSFER_DESTINATION_OPTIONS: TransferDestinationOption[] = [
   { value: "Bodrum Merkez", trLabel: "Bodrum Merkez", enLabel: "Bodrum Center", prices: { economic: 1400, vip: 1900, minibus: 2400, luxury: 3200 } },
@@ -47,6 +54,7 @@ export const initialTransferFormState: TransferFormState = {
   language: "en",
   airportCode: "BJV",
   flightCode: "",
+  transferDirection: "from_airport",
   destination: TRANSFER_DESTINATION_OPTIONS[0].value,
   passengers: 1,
   bags: 1,
@@ -59,6 +67,29 @@ export function createTransferRequestCode(): string {
   return generateRequestCode("transfer", Date.now() % 9000);
 }
 
+export function airportLabel(airportCode: string): string {
+  return airportCode === "BJV" ? "Milas-Bodrum Havalimanı" : airportCode;
+}
+
+export function buildTransferRoute(state: Pick<TransferFormState, "airportCode" | "destination" | "transferDirection">) {
+  const airport = airportLabel(state.airportCode);
+  if (state.transferDirection === "to_airport") {
+    return {
+      routeFrom: state.destination,
+      routeTo: airport,
+      pickupLocation: state.destination,
+      dropoffLocation: airport
+    };
+  }
+
+  return {
+    routeFrom: airport,
+    routeTo: state.destination,
+    pickupLocation: airport,
+    dropoffLocation: state.destination
+  };
+}
+
 export function estimateTransferPrice(state: Pick<TransferFormState, "destination" | "vehicleClass" | "passengers">): number {
   const destination = TRANSFER_DESTINATION_OPTIONS.find((item) => item.value === state.destination) || TRANSFER_DESTINATION_OPTIONS[0];
   const basePrice = destination.prices[state.vehicleClass] || destination.prices.economic;
@@ -67,6 +98,7 @@ export function estimateTransferPrice(state: Pick<TransferFormState, "destinatio
 }
 
 export function validateTransferForm(state: TransferFormState): string | null {
+  if (!state.transferDirection) return "Transfer direction is required.";
   if (!state.destination.trim()) return "Destination is required.";
   if (!state.pickupDate.trim()) return "Pickup date is required.";
   if (!state.pickupTime.trim()) return "Pickup time is required.";
