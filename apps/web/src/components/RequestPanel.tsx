@@ -5,7 +5,8 @@ import { hotelCopy, rentalCopy, ticketCopy, transferCopy } from "../webCopy";
 import type { HomeCopy, TabKey } from "../landingContent";
 import {
   buildTransferRoute,
-  estimateTransferPrice,
+  formatTransferPriceRange,
+  getTransferPriceSummary,
   TRANSFER_DESTINATION_OPTIONS,
   TRANSFER_DIRECTION_OPTIONS,
   TRANSFER_VEHICLE_OPTIONS,
@@ -102,13 +103,15 @@ export function RequestPanel({
   const activeSubmit = activeTab === "transfer" ? transferText.submit : activeTab === "rental" ? rentalText.submit : activeTab === "hotel" ? hotelText.submit : ticketText.submit;
   const activeSending = activeTab === "transfer" ? transferText.sending : activeTab === "rental" ? rentalText.sending : activeTab === "hotel" ? hotelText.sending : ticketText.sending;
   const tabItems: Array<[TabKey, string]> = [["transfer", home.tabs.transfer], ["rental", home.tabs.rental], ["hotel", home.tabs.hotel], ["ticket", home.tabs.ticket]];
-  const transferEstimatedPrice = estimateTransferPrice(transferForm);
   const transferRoute = buildTransferRoute(transferForm);
-  const priceLabel = language === "tr" ? "Tahmini ücret" : "Estimated price";
+  const priceSummary = getTransferPriceSummary(transferForm);
+  const priceRangeText = formatTransferPriceRange(priceSummary);
+  const priceLabel = language === "tr" ? "Tahmini fiyat aralığı" : "Estimated price range";
+  const providerCountLabel = priceSummary ? (language === "tr" ? `${priceSummary.providerCount} uygun araç` : `${priceSummary.providerCount} available vehicles`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
   const routeStepTitle = language === "tr" ? "Transfer yönünü ve rotanı seç" : "Choose direction and route";
   const contactStepTitle = language === "tr" ? "Son bilgileri bırak" : "Add final details";
   const routeHelper = language === "tr" ? "Havalimanından çıkış mı, yoksa bölgeden havalimanına geliş mi olduğunu seç. Sonra bölge, tarih, saat ve araç tipini belirle." : "Choose whether the trip starts from the airport or goes to the airport. Then select area, date, time and vehicle type.";
-  const priceHelper = language === "tr" ? `Rota: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Net fiyat sağlayıcı onayıyla kesinleşir.` : `Route: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Final price is confirmed by the provider.`;
+  const priceHelper = language === "tr" ? `Rota: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Net fiyat işi alan sağlayıcı onayıyla kesinleşir.` : `Route: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Final price is confirmed by the provider who accepts the job.`;
   const directionLabel = language === "tr" ? "Transfer yönü" : "Transfer direction";
   const destinationLabel = transferForm.transferDirection === "to_airport" ? (language === "tr" ? "Nereden alınacak?" : "Pickup area") : transferText.destination;
   const pickupDateLabel = language === "tr" ? "Alış tarihi" : "Pickup date";
@@ -145,7 +148,7 @@ export function RequestPanel({
             <Field label={bagsLabel}><Input type="number" value={String(transferForm.bags)} onChange={(value) => setTransferForm((current) => ({ ...current, bags: Number(value) }))} /></Field>
           </div>
           <div className="priceSummary" style={priceSummaryStyle}>
-            <div><span>{priceLabel}</span><strong>{transferEstimatedPrice.toLocaleString("tr-TR")} TL</strong></div>
+            <div><span>{priceLabel}</span><strong>{priceRangeText}</strong><small style={{ display: "block", marginTop: "4px", color: "#087f68", fontWeight: 900 }}>{providerCountLabel}</small></div>
             <p>{priceHelper}</p>
           </div>
           <div className="transferStep" style={{ ...transferStepStyle, paddingTop: 0 }}><span style={transferStepBadgeStyle}>2</span><div><b>{contactStepTitle}</b><p>{language === "tr" ? "Talebi göndermek için ad, telefon ve varsa uçuş kodunu yaz." : "Enter name, phone and flight code if available to send the request."}</p></div></div>
