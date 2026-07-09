@@ -20,7 +20,24 @@ function meta(request: CarRentalRequest): string {
   const flight = request.flightCode ? `Flight ${request.flightCode}` : "No flight code";
   const carClass = request.carClass || "class not set";
   const transmission = request.transmission || "transmission not set";
-  return `${flight} / ${carClass} / ${transmission}`;
+  const pickupTime = request.pickupTime ? `Pickup ${request.pickupTime}` : "pickup time not set";
+  const dropoffTime = request.dropoffTime ? `Dropoff ${request.dropoffTime}` : "dropoff time not set";
+  const passengers = request.passengers ? `${request.passengers} passengers` : "passengers not set";
+  return `${flight} / ${carClass} / ${transmission} / ${passengers} / ${pickupTime} / ${dropoffTime}`;
+}
+
+function priceRange(request: CarRentalRequest): string {
+  if (typeof request.estimatedDailyPriceMin === "number" && typeof request.estimatedDailyPriceMax === "number") {
+    const range = request.estimatedDailyPriceMin === request.estimatedDailyPriceMax ? `${request.estimatedDailyPriceMin}` : `${request.estimatedDailyPriceMin} - ${request.estimatedDailyPriceMax}`;
+    return `${range} ${request.currency} / day`;
+  }
+  if (typeof request.estimatedTotalPrice === "number") return `${request.estimatedTotalPrice} ${request.currency}`;
+  return `not set ${request.currency}`;
+}
+
+function matchedVehicles(request: CarRentalRequest): string {
+  if (typeof request.matchedVehicleCount === "number") return `${request.matchedVehicleCount} matched vehicles`;
+  return "matched vehicles not set";
 }
 
 export default function AdminCarRentalPage() {
@@ -105,6 +122,7 @@ export default function AdminCarRentalPage() {
       createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Pickup: ${request.pickupDate}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Dropoff: ${request.dropoffDate}`),
+      createElement("p", { style: { margin: "0 0 6px" } }, `Price range: ${priceRange(request)} / ${matchedVehicles(request)} / ${request.estimatedRentalDays || 1} days`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
       request.id ? createElement("div", null,
         createElement("select", { style: selectStyle, value: nextStatuses[request.id] || request.status, onChange: (event) => setNextStatuses((current) => ({ ...current, [request.id || ""]: event.currentTarget.value as CarRentalStatus })) },
