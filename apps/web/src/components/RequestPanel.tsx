@@ -1,3 +1,4 @@
+import type { CarRentalDailyPrice, HotelNightlyPrice, TransferRoutePrice } from "@arrivio/shared";
 import type { CSSProperties, ChangeEvent, Dispatch, ReactNode, SetStateAction } from "react";
 import type { WebLanguage } from "../supportModel";
 import { whatsappSupportUrl } from "../supportModel";
@@ -46,6 +47,9 @@ type RequestPanelProps = {
   setHotelForm: Dispatch<SetStateAction<HotelFormState>>;
   ticketForm: TicketFormState;
   setTicketForm: Dispatch<SetStateAction<TicketFormState>>;
+  transferRoutePrices: TransferRoutePrice[];
+  carRentalDailyPrices: CarRentalDailyPrice[];
+  hotelNightlyPrices: HotelNightlyPrice[];
   isSubmitting: boolean;
   status: string;
   requestCode: string;
@@ -110,6 +114,9 @@ export function RequestPanel({
   setHotelForm,
   ticketForm,
   setTicketForm,
+  transferRoutePrices,
+  carRentalDailyPrices,
+  hotelNightlyPrices,
   isSubmitting,
   status,
   requestCode,
@@ -124,9 +131,12 @@ export function RequestPanel({
   const activeSubmit = activeTab === "transfer" ? transferText.submit : activeTab === "rental" ? rentalText.submit : activeTab === "hotel" ? hotelText.submit : ticketText.submit;
   const activeSending = activeTab === "transfer" ? transferText.sending : activeTab === "rental" ? rentalText.sending : activeTab === "hotel" ? hotelText.sending : ticketText.sending;
   const tabItems: Array<[TabKey, string]> = [["transfer", home.tabs.transfer], ["rental", home.tabs.rental], ["hotel", home.tabs.hotel], ["ticket", home.tabs.ticket]];
+  const liveTransferPrices = transferRoutePrices.length ? transferRoutePrices : undefined;
+  const liveRentalPrices = carRentalDailyPrices.length ? carRentalDailyPrices : undefined;
+  const liveHotelPrices = hotelNightlyPrices.length ? hotelNightlyPrices : undefined;
 
   const transferRoute = buildTransferRoute(transferForm);
-  const priceSummary = getTransferPriceSummary(transferForm);
+  const priceSummary = getTransferPriceSummary(transferForm, liveTransferPrices);
   const priceRangeText = formatTransferPriceRange(priceSummary);
   const priceLabel = language === "tr" ? "Tahmini fiyat aralığı" : "Estimated price range";
   const providerCountLabel = priceSummary ? (language === "tr" ? `${priceSummary.providerCount} uygun araç` : `${priceSummary.providerCount} available vehicles`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
@@ -141,12 +151,12 @@ export function RequestPanel({
   const vehicleLabel = language === "tr" ? "Araç tipi" : "Vehicle type";
   const bagsLabel = language === "tr" ? "Bagaj" : "Bags";
 
-  const rentalSummary = getCarRentalPriceSummary(rentalForm);
+  const rentalSummary = getCarRentalPriceSummary(rentalForm, liveRentalPrices);
   const rentalPriceText = formatCarRentalDailyPriceRange(rentalSummary);
   const rentalVehicleCount = rentalSummary ? (language === "tr" ? `${rentalSummary.vehicleCount} uygun araç` : `${rentalSummary.vehicleCount} available cars`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
   const rentalHelper = language === "tr" ? `Tahmini ${rentalSummary?.rentalDays || 1} gün. Net fiyat rent a car firması onayıyla kesinleşir.` : `Estimated ${rentalSummary?.rentalDays || 1} days. Final price is confirmed by the rental provider.`;
 
-  const hotelSummary = getHotelPriceSummary(hotelForm);
+  const hotelSummary = getHotelPriceSummary(hotelForm, liveHotelPrices);
   const hotelPriceText = formatHotelNightlyPriceRange(hotelSummary);
   const hotelCount = hotelSummary ? (language === "tr" ? `${hotelSummary.hotelCount} uygun tesis` : `${hotelSummary.hotelCount} available properties`) : (language === "tr" ? "Uygun tesis kontrol edilecek" : "Availability will be checked");
   const hotelHelper = language === "tr" ? `Tahmini ${hotelSummary?.nightCount || 1} gece. Net fiyat tesis müsaitlik onayıyla kesinleşir.` : `Estimated ${hotelSummary?.nightCount || 1} nights. Final price is confirmed after property availability.`;
