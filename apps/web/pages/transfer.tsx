@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { createTransferRequest } from "@arrivio/firebase";
 import {
+  buildTransferRoute,
   createTransferRequestCode,
   estimateTransferPrice,
   initialTransferFormState,
   TRANSFER_DESTINATION_OPTIONS,
+  TRANSFER_DIRECTION_OPTIONS,
   TRANSFER_VEHICLE_OPTIONS,
   validateTransferForm,
+  type TransferDirection,
   type TransferFormState,
   type TransferVehicleClass
 } from "../src/transferFormModel";
@@ -92,6 +95,7 @@ export default function TransferPage() {
   const [requestCode, setRequestCode] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const estimatedPrice = estimateTransferPrice(form);
+  const route = buildTransferRoute(form);
 
   async function submitTransferRequest() {
     const error = validateTransferForm(form);
@@ -128,12 +132,17 @@ export default function TransferPage() {
         {qrSourceId ? <p style={{ color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" }}>{text.qrDetected}</p> : null}
 
         <div style={{ padding: "16px", borderRadius: "18px", background: "#F0F7FF", marginTop: "18px" }}>
-          <strong>{language === "tr" ? "1. Transferini seç" : "1. Choose your transfer"}</strong>
-          <p style={{ margin: "6px 0 0", color: "#4B5563" }}>{language === "tr" ? "Rota, tarih, saat ve araç tipini seç. Tahmini ücret hemen görünsün." : "Select route, date, time and vehicle type. See the estimated price instantly."}</p>
+          <strong>{language === "tr" ? "1. Transfer yönünü ve rotanı seç" : "1. Choose direction and route"}</strong>
+          <p style={{ margin: "6px 0 0", color: "#4B5563" }}>{language === "tr" ? "Havalimanından çıkış mı, yoksa bölgeden havalimanına geliş mi olduğunu seç." : "Choose whether the trip starts from the airport or goes to the airport."}</p>
         </div>
 
         <div style={gridStyle}>
-          <label>{text.destination}
+          <label>{language === "tr" ? "Transfer yönü" : "Transfer direction"}
+            <select style={inputStyle} value={form.transferDirection} onChange={(event) => updateField("transferDirection", event.currentTarget.value as TransferDirection)}>
+              {TRANSFER_DIRECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+            </select>
+          </label>
+          <label>{form.transferDirection === "to_airport" ? (language === "tr" ? "Nereden alınacak?" : "Pickup area") : text.destination}
             <select style={inputStyle} value={form.destination} onChange={(event) => updateField("destination", event.currentTarget.value)}>
               {TRANSFER_DESTINATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
             </select>
@@ -162,7 +171,7 @@ export default function TransferPage() {
             <span style={{ color: "#087F68", fontWeight: 700 }}>{language === "tr" ? "Tahmini ücret" : "Estimated price"}</span>
             <strong style={{ display: "block", fontSize: "30px", marginTop: "4px" }}>{estimatedPrice.toLocaleString("tr-TR")} TL</strong>
           </div>
-          <p style={{ margin: 0, color: "#4B5563", maxWidth: "420px" }}>{language === "tr" ? "Net fiyat sağlayıcı onayıyla kesinleşir. Yolcu platform ücreti ödemez." : "Final price is confirmed by the provider. Passenger pays no platform fee."}</p>
+          <p style={{ margin: 0, color: "#4B5563", maxWidth: "420px" }}>{language === "tr" ? `Rota: ${route.routeFrom} → ${route.routeTo}. Net fiyat sağlayıcı onayıyla kesinleşir.` : `Route: ${route.routeFrom} → ${route.routeTo}. Final price is confirmed by the provider.`}</p>
         </div>
 
         <div style={{ padding: "16px", borderRadius: "18px", background: "#F8FAFC", marginTop: "18px" }}>
