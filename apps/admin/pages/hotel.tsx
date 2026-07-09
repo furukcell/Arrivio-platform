@@ -20,7 +20,22 @@ function meta(request: HotelRequest): string {
   const rooms = request.rooms ? `${request.rooms} rooms` : "rooms not set";
   const radius = request.radiusKm ? `${request.radiusKm} km radius` : "radius not set";
   const transfer = request.wantsTransfer ? "transfer requested" : "no transfer";
-  return `${request.guests} guests / ${rooms} / ${radius} / ${transfer}`;
+  const type = request.accommodationType ? `type ${request.accommodationType}` : "type not set";
+  return `${request.guests} guests / ${rooms} / ${radius} / ${type} / ${transfer}`;
+}
+
+function priceRange(request: HotelRequest): string {
+  if (typeof request.estimatedNightlyPriceMin === "number" && typeof request.estimatedNightlyPriceMax === "number") {
+    const range = request.estimatedNightlyPriceMin === request.estimatedNightlyPriceMax ? `${request.estimatedNightlyPriceMin}` : `${request.estimatedNightlyPriceMin} - ${request.estimatedNightlyPriceMax}`;
+    return `${range} ${request.currency} / night`;
+  }
+  if (typeof request.estimatedTotalPrice === "number") return `${request.estimatedTotalPrice} ${request.currency}`;
+  return `not set ${request.currency}`;
+}
+
+function matchedHotels(request: HotelRequest): string {
+  if (typeof request.matchedHotelCount === "number") return `${request.matchedHotelCount} matched properties`;
+  return "matched properties not set";
 }
 
 export default function AdminHotelPage() {
@@ -104,6 +119,7 @@ export default function AdminHotelPage() {
       createElement("p", { style: { margin: "0 0 6px", color: "#4B5563" } }, meta(request)),
       createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Flight: ${request.flightCode || "not set"}`),
+      createElement("p", { style: { margin: "0 0 6px" } }, `Price range: ${priceRange(request)} / ${matchedHotels(request)} / ${request.estimatedNightCount || 1} nights`),
       createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
       request.id ? createElement("div", null,
         createElement("select", { style: selectStyle, value: nextStatuses[request.id] || request.status, onChange: (event) => setNextStatuses((current) => ({ ...current, [request.id || ""]: event.currentTarget.value as HotelStatus })) },
