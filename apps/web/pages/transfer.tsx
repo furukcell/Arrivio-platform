@@ -1,11 +1,15 @@
-import { createElement, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { createTransferRequest } from "@arrivio/firebase";
 import {
   createTransferRequestCode,
+  estimateTransferPrice,
   initialTransferFormState,
+  TRANSFER_DESTINATION_OPTIONS,
+  TRANSFER_VEHICLE_OPTIONS,
   validateTransferForm,
-  type TransferFormState
+  type TransferFormState,
+  type TransferVehicleClass
 } from "../src/transferFormModel";
 import { mapTransferFormToRequest } from "../src/transferRequestMapper";
 import { getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
@@ -20,7 +24,7 @@ const pageStyle = {
 };
 
 const cardStyle = {
-  maxWidth: "720px",
+  maxWidth: "860px",
   margin: "0 auto",
   padding: "24px",
   borderRadius: "24px",
@@ -28,14 +32,22 @@ const cardStyle = {
   boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)"
 };
 
+const gridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "14px",
+  marginTop: "18px"
+};
+
 const inputStyle = {
   width: "100%",
   padding: "14px",
   marginTop: "6px",
-  marginBottom: "14px",
+  marginBottom: "4px",
   border: "1px solid #D1D5DB",
   borderRadius: "12px",
-  fontSize: "16px"
+  fontSize: "16px",
+  background: "#FFFFFF"
 };
 
 const buttonStyle = {
@@ -47,7 +59,8 @@ const buttonStyle = {
   color: "#FFFFFF",
   fontWeight: 700,
   fontSize: "16px",
-  cursor: "pointer"
+  cursor: "pointer",
+  marginTop: "18px"
 };
 
 const supportStyle = {
@@ -78,6 +91,7 @@ export default function TransferPage() {
   const [status, setStatus] = useState<string>("");
   const [requestCode, setRequestCode] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const estimatedPrice = estimateTransferPrice(form);
 
   async function submitTransferRequest() {
     const error = validateTransferForm(form);
@@ -104,65 +118,75 @@ export default function TransferPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  return createElement(
-    "main",
-    { style: pageStyle },
-    createElement(
-      "section",
-      { style: cardStyle },
-      createElement("a", { href: `/?lang=${language}`, style: { color: "#0B63F6", fontWeight: 700 } }, text.home),
-      createElement("p", { style: { color: "#0B63F6", fontWeight: 700 } }, text.airport),
-      createElement("h1", { style: { fontSize: "42px", margin: "0 0 10px" } }, text.title),
-      createElement("p", { style: { color: "#4B5563", marginBottom: "12px" } }, text.description),
-      qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" } }, text.qrDetected) : null,
-      createElement("label", null, text.passengerName),
-      createElement("input", {
-        style: inputStyle,
-        value: form.passengerName,
-        onChange: (event) => updateField("passengerName", event.currentTarget.value),
-        placeholder: text.passengerPlaceholder
-      }),
-      createElement("label", null, text.phone),
-      createElement("input", {
-        style: inputStyle,
-        value: form.passengerPhone,
-        onChange: (event) => updateField("passengerPhone", event.currentTarget.value),
-        placeholder: "+90 5xx xxx xx xx"
-      }),
-      createElement("label", null, text.flightCode),
-      createElement("input", {
-        style: inputStyle,
-        value: form.flightCode,
-        onChange: (event) => updateField("flightCode", event.currentTarget.value),
-        placeholder: "TK2524"
-      }),
-      createElement("label", null, text.destination),
-      createElement("input", {
-        style: inputStyle,
-        value: form.destination,
-        onChange: (event) => updateField("destination", event.currentTarget.value),
-        placeholder: "Bodrum Center, Yalikavak, Turgutreis..."
-      }),
-      createElement("label", null, text.passengers),
-      createElement("input", {
-        style: inputStyle,
-        type: "number",
-        min: 1,
-        value: form.passengers,
-        onChange: (event) => updateField("passengers", Number(event.currentTarget.value))
-      }),
-      createElement("label", null, text.bags),
-      createElement("input", {
-        style: inputStyle,
-        type: "number",
-        min: 0,
-        value: form.bags,
-        onChange: (event) => updateField("bags", Number(event.currentTarget.value))
-      }),
-      createElement("button", { style: buttonStyle, type: "button", onClick: submitTransferRequest, disabled: isSubmitting }, isSubmitting ? text.sending : text.submit),
-      createElement("a", { href: whatsappSupportUrl(language), style: supportStyle }, text.support),
-      status ? createElement("p", { style: { marginTop: "18px", fontWeight: 700 } }, status) : null,
-      requestCode ? createElement("p", { style: { marginTop: "8px" } }, `${text.requestCode}: ${requestCode}`) : null
-    )
+  return (
+    <main style={pageStyle}>
+      <section style={cardStyle}>
+        <a href={`/?lang=${language}`} style={{ color: "#0B63F6", fontWeight: 700 }}>{text.home}</a>
+        <p style={{ color: "#0B63F6", fontWeight: 700 }}>{text.airport}</p>
+        <h1 style={{ fontSize: "42px", margin: "0 0 10px" }}>{text.title}</h1>
+        <p style={{ color: "#4B5563", marginBottom: "12px" }}>{text.description}</p>
+        {qrSourceId ? <p style={{ color: "#1FB6A6", fontWeight: 700, marginBottom: "24px" }}>{text.qrDetected}</p> : null}
+
+        <div style={{ padding: "16px", borderRadius: "18px", background: "#F0F7FF", marginTop: "18px" }}>
+          <strong>{language === "tr" ? "1. Transferini seç" : "1. Choose your transfer"}</strong>
+          <p style={{ margin: "6px 0 0", color: "#4B5563" }}>{language === "tr" ? "Rota, tarih, saat ve araç tipini seç. Tahmini ücret hemen görünsün." : "Select route, date, time and vehicle type. See the estimated price instantly."}</p>
+        </div>
+
+        <div style={gridStyle}>
+          <label>{text.destination}
+            <select style={inputStyle} value={form.destination} onChange={(event) => updateField("destination", event.currentTarget.value)}>
+              {TRANSFER_DESTINATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+            </select>
+          </label>
+          <label>{language === "tr" ? "Alış tarihi" : "Pickup date"}
+            <input style={inputStyle} type="date" value={form.pickupDate} onChange={(event) => updateField("pickupDate", event.currentTarget.value)} />
+          </label>
+          <label>{language === "tr" ? "Alış saati" : "Pickup time"}
+            <input style={inputStyle} type="time" value={form.pickupTime} onChange={(event) => updateField("pickupTime", event.currentTarget.value)} />
+          </label>
+          <label>{text.passengers}
+            <input style={inputStyle} type="number" min={1} value={form.passengers} onChange={(event) => updateField("passengers", Number(event.currentTarget.value))} />
+          </label>
+          <label>{language === "tr" ? "Araç tipi" : "Vehicle type"}
+            <select style={inputStyle} value={form.vehicleClass} onChange={(event) => updateField("vehicleClass", event.currentTarget.value as TransferVehicleClass)}>
+              {TRANSFER_VEHICLE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+            </select>
+          </label>
+          <label>{language === "tr" ? "Bagaj" : "Bags"}
+            <input style={inputStyle} type="number" min={0} value={form.bags} onChange={(event) => updateField("bags", Number(event.currentTarget.value))} />
+          </label>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "14px", alignItems: "center", padding: "16px", borderRadius: "18px", background: "#E9FBF6", marginTop: "18px" }}>
+          <div>
+            <span style={{ color: "#087F68", fontWeight: 700 }}>{language === "tr" ? "Tahmini ücret" : "Estimated price"}</span>
+            <strong style={{ display: "block", fontSize: "30px", marginTop: "4px" }}>{estimatedPrice.toLocaleString("tr-TR")} TL</strong>
+          </div>
+          <p style={{ margin: 0, color: "#4B5563", maxWidth: "420px" }}>{language === "tr" ? "Net fiyat sağlayıcı onayıyla kesinleşir. Yolcu platform ücreti ödemez." : "Final price is confirmed by the provider. Passenger pays no platform fee."}</p>
+        </div>
+
+        <div style={{ padding: "16px", borderRadius: "18px", background: "#F8FAFC", marginTop: "18px" }}>
+          <strong>{language === "tr" ? "2. Son bilgileri bırak" : "2. Add final details"}</strong>
+          <p style={{ margin: "6px 0 0", color: "#4B5563" }}>{language === "tr" ? "Talebi göndermek için ad, telefon ve varsa uçuş kodunu yaz." : "Enter name, phone and flight code if available to send the request."}</p>
+        </div>
+
+        <div style={gridStyle}>
+          <label>{text.passengerName}
+            <input style={inputStyle} value={form.passengerName} onChange={(event) => updateField("passengerName", event.currentTarget.value)} placeholder={text.passengerPlaceholder} />
+          </label>
+          <label>{text.phone}
+            <input style={inputStyle} value={form.passengerPhone} onChange={(event) => updateField("passengerPhone", event.currentTarget.value)} placeholder="+90 5xx xxx xx xx" />
+          </label>
+          <label>{text.flightCode}
+            <input style={inputStyle} value={form.flightCode} onChange={(event) => updateField("flightCode", event.currentTarget.value)} placeholder="TK2524" />
+          </label>
+        </div>
+
+        <button style={buttonStyle} type="button" onClick={submitTransferRequest} disabled={isSubmitting}>{isSubmitting ? text.sending : text.submit}</button>
+        <a href={whatsappSupportUrl(language)} style={supportStyle}>{text.support}</a>
+        {status ? <p style={{ marginTop: "18px", fontWeight: 700 }}>{status}</p> : null}
+        {requestCode ? <p style={{ marginTop: "8px" }}>{text.requestCode}: {requestCode}</p> : null}
+      </section>
+    </main>
   );
 }
