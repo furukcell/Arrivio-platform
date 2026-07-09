@@ -11,8 +11,10 @@ import {
 } from "@arrivio/firebase";
 import type { CommissionStatus, Provider, TransferRequest } from "@arrivio/shared";
 import {
+  formatMatchedProviderCount,
   formatProviderInfo,
   formatTransferMeta,
+  formatTransferPriceRange,
   formatTransferRoute,
   formatTransferTitle
 } from "../src/transferAdminModel";
@@ -257,7 +259,7 @@ export default function AdminTransferRequestsPage() {
         createElement("p", { style: { margin: "0 0 6px", color: "#4B5563" } }, formatTransferMeta(request)),
         createElement("p", { style: { margin: "0 0 6px" } }, `Phone: ${request.passengerPhone}`),
         createElement("p", { style: { margin: "0 0 6px" } }, `Status: ${request.status}`),
-        createElement("p", { style: { margin: "0 0 6px" } }, `Price: ${request.estimatedTotalPrice ?? "not set"} ${request.currency}`),
+        createElement("p", { style: { margin: "0 0 6px" } }, `Price range: ${formatTransferPriceRange(request)} / ${formatMatchedProviderCount(request)}`),
         createElement("p", { style: { margin: "0 0 6px" } }, `Commission: ${request.commissionAmount ?? "not set"} ${request.currency} / ${request.commissionStatus}`),
         createElement("p", { style: { margin: "0 0 8px" } }, `Provider: ${formatProviderInfo(request)}`),
         createElement("select", {
@@ -280,7 +282,7 @@ export default function AdminTransferRequestsPage() {
             style: inputStyle,
             value: priceInputs[request.id] ?? (typeof request.estimatedTotalPrice === "number" ? String(request.estimatedTotalPrice) : ""),
             onChange: (event) => setPrice(request.id || "", event.currentTarget.value),
-            placeholder: "Total price"
+            placeholder: "Final total price"
           }),
           createElement("input", {
             style: inputStyle,
