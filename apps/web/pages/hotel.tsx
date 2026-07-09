@@ -1,6 +1,7 @@
-import { createElement, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { createHotelRequest } from "@arrivio/firebase";
+import { createHotelRequest, listPublicHotelNightlyPrices } from "@arrivio/firebase";
+import type { HotelNightlyPrice } from "@arrivio/shared";
 import {
   createHotelRequestCode,
   formatHotelNightlyPriceRange,
@@ -34,12 +35,28 @@ export default function HotelPage() {
   const text = hotelCopy(language);
   const qrSourceId = queryValue(router.query.qrSourceId);
   const [form, setForm] = useState<HotelFormState>(initialHotelFormState);
+  const [nightlyPrices, setNightlyPrices] = useState<HotelNightlyPrice[]>([]);
   const [status, setStatus] = useState("");
   const [requestCode, setRequestCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const priceSummary = getHotelPriceSummary(form);
+  const livePrices = nightlyPrices.length ? nightlyPrices : undefined;
+  const priceSummary = getHotelPriceSummary(form, livePrices);
   const priceRangeText = formatHotelNightlyPriceRange(priceSummary);
   const hotelCount = priceSummary ? (language === "tr" ? `${priceSummary.hotelCount} uygun tesis` : `${priceSummary.hotelCount} available properties`) : (language === "tr" ? "Uygun tesis kontrol edilecek" : "Availability will be checked");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPrices() {
+      try {
+        const prices = await listPublicHotelNightlyPrices();
+        if (isMounted) setNightlyPrices(prices);
+      } catch (error) {
+        if (isMounted) setNightlyPrices([]);
+      }
+    }
+    loadPrices();
+    return () => { isMounted = false; };
+  }, []);
 
   function updateField<K extends keyof HotelFormState>(key: K, value: HotelFormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -54,7 +71,7 @@ export default function HotelPage() {
     setIsSubmitting(true);
     try {
       const code = createHotelRequestCode();
-      await createHotelRequest(mapHotelFormToRequest(form, code, qrSourceId || undefined, language));
+      await createHotelRequest(mapHotelFormToRequest(form, code, qrSourceId || undefined, language, nightlyPrices));
       setRequestCode(code);
       setStatus(text.success);
     } catch (error) {
@@ -72,39 +89,16 @@ export default function HotelPage() {
       createElement("p", { style: { color: "#4B5563", marginBottom: "18px" } }, text.description),
       qrSourceId ? createElement("p", { style: { color: "#1FB6A6", fontWeight: 700 } }, text.qrDetected) : null,
       createElement("div", { style: gridStyle },
-        createElement("label", null, text.passengerName,
-          createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: text.passengerPlaceholder })
-        ),
-        createElement("label", null, text.phone,
-          createElement("input", { style: inputStyle, value: form.passengerPhone, onChange: (event) => updateField("passengerPhone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" })
-        ),
-        createElement("label", null, text.flightCode,
-          createElement("input", { style: inputStyle, value: form.flightCode, onChange: (event) => updateField("flightCode", event.currentTarget.value), placeholder: "TK2524" })
-        ),
-        createElement("label", null, language === "tr" ? "Konaklama tipi" : "Accommodation type",
-          createElement("select", { style: inputStyle, value: form.accommodationType, onChange: (event) => updateField("accommodationType", event.currentTarget.value as HotelAccommodationType) },
-            ...HOTEL_ACCOMMODATION_OPTIONS.map((option) => createElement("option", { key: option.value, value: option.value }, language === "tr" ? option.trLabel : option.enLabel))
-          )
-        ),
-        createElement("label", null, text.checkIn,
-          createElement("input", { style: inputStyle, type: "date", value: form.checkInDate, onChange: (event) => updateField("checkInDate", event.currentTarget.value) })
-        ),
-        createElement("label", null, text.checkOut,
-          createElement("input", { style: inputStyle, type: "date", value: form.checkOutDate, onChange: (event) => updateField("checkOutDate", event.currentTarget.value) })
-        ),
-        createElement("label", null, text.guests,
-          createElement("input", { style: inputStyle, type: "number", min: 1, value: form.guests, onChange: (event) => updateField("guests", Number(event.currentTarget.value)) })
-        ),
-        createElement("label", null, text.rooms,
-          createElement("input", { style: inputStyle, type: "number", min: 1, value: form.rooms, onChange: (event) => updateField("rooms", Number(event.currentTarget.value)) })
-        ),
-        createElement("label", null, text.radius,
-          createElement("input", { style: inputStyle, type: "number", min: 1, value: form.radiusKm, onChange: (event) => updateField("radiusKm", Number(event.currentTarget.value)) })
-        ),
-        createElement("label", { style: { display: "flex", alignItems: "center", gap: "8px", paddingTop: "28px" } },
-          createElement("input", { type: "checkbox", checked: form.wantsTransfer, onChange: (event) => updateField("wantsTransfer", event.currentTarget.checked) }),
-          text.wantsTransfer
-        )
+        createElement("label", null, text.passengerName, createElement("input", { style: inputStyle, value: form.passengerName, onChange: (event) => updateField("passengerName", event.currentTarget.value), placeholder: text.passengerPlaceholder })),
+        createElement("label", null, text.phone, createElement("input", { style: inputStyle, value: form.passengerPhone, onChange: (event) => updateField("passengerPhone", event.currentTarget.value), placeholder: "+90 5xx xxx xx xx" })),
+        createElement("label", null, text.flightCode, createElement("input", { style: inputStyle, value: form.flightCode, onChange: (event) => updateField("flightCode", event.currentTarget.value), placeholder: "TK2524" })),
+        createElement("label", null, language === "tr" ? "Konaklama tipi" : "Accommodation type", createElement("select", { style: inputStyle, value: form.accommodationType, onChange: (event) => updateField("accommodationType", event.currentTarget.value as HotelAccommodationType) }, ...HOTEL_ACCOMMODATION_OPTIONS.map((option) => createElement("option", { key: option.value, value: option.value }, language === "tr" ? option.trLabel : option.enLabel)))),
+        createElement("label", null, text.checkIn, createElement("input", { style: inputStyle, type: "date", value: form.checkInDate, onChange: (event) => updateField("checkInDate", event.currentTarget.value) })),
+        createElement("label", null, text.checkOut, createElement("input", { style: inputStyle, type: "date", value: form.checkOutDate, onChange: (event) => updateField("checkOutDate", event.currentTarget.value) })),
+        createElement("label", null, text.guests, createElement("input", { style: inputStyle, type: "number", min: 1, value: form.guests, onChange: (event) => updateField("guests", Number(event.currentTarget.value)) })),
+        createElement("label", null, text.rooms, createElement("input", { style: inputStyle, type: "number", min: 1, value: form.rooms, onChange: (event) => updateField("rooms", Number(event.currentTarget.value)) })),
+        createElement("label", null, text.radius, createElement("input", { style: inputStyle, type: "number", min: 1, value: form.radiusKm, onChange: (event) => updateField("radiusKm", Number(event.currentTarget.value)) })),
+        createElement("label", { style: { display: "flex", alignItems: "center", gap: "8px", paddingTop: "28px" } }, createElement("input", { type: "checkbox", checked: form.wantsTransfer, onChange: (event) => updateField("wantsTransfer", event.currentTarget.checked) }), text.wantsTransfer)
       ),
       createElement("div", { style: summaryStyle },
         createElement("div", null,
