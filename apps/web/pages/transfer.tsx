@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { createTransferRequest } from "@arrivio/firebase";
+import { createTransferRequest, listPublicTransferRoutePrices } from "@arrivio/firebase";
+import type { TransferRoutePrice } from "@arrivio/shared";
 import {
   buildTransferRoute,
   createTransferRequestCode,
@@ -19,67 +20,12 @@ import { mapTransferFormToRequest } from "../src/transferRequestMapper";
 import { getLanguage, translateFormMessage, whatsappSupportUrl } from "../src/supportModel";
 import { transferCopy } from "../src/webCopy";
 
-const pageStyle = {
-  minHeight: "100vh",
-  padding: "24px",
-  fontFamily: "Arial, sans-serif",
-  background: "#F7FBFF",
-  color: "#08183A"
-};
-
-const cardStyle = {
-  maxWidth: "860px",
-  margin: "0 auto",
-  padding: "24px",
-  borderRadius: "24px",
-  background: "#FFFFFF",
-  boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)"
-};
-
-const gridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: "14px",
-  marginTop: "18px"
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginTop: "6px",
-  marginBottom: "4px",
-  border: "1px solid #D1D5DB",
-  borderRadius: "12px",
-  fontSize: "16px",
-  background: "#FFFFFF"
-};
-
-const buttonStyle = {
-  width: "100%",
-  padding: "15px",
-  border: 0,
-  borderRadius: "999px",
-  background: "#0B63F6",
-  color: "#FFFFFF",
-  fontWeight: 700,
-  fontSize: "16px",
-  cursor: "pointer",
-  marginTop: "18px"
-};
-
-const supportStyle = {
-  display: "block",
-  width: "100%",
-  boxSizing: "border-box" as const,
-  textAlign: "center" as const,
-  padding: "15px",
-  borderRadius: "999px",
-  background: "#1FB6A6",
-  color: "#FFFFFF",
-  fontWeight: 700,
-  textDecoration: "none",
-  marginTop: "12px"
-};
+const pageStyle = { minHeight: "100vh", padding: "24px", fontFamily: "Arial, sans-serif", background: "#F7FBFF", color: "#08183A" };
+const cardStyle = { maxWidth: "860px", margin: "0 auto", padding: "24px", borderRadius: "24px", background: "#FFFFFF", boxShadow: "0 18px 60px rgba(8, 24, 58, 0.10)" };
+const gridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px", marginTop: "18px" };
+const inputStyle = { width: "100%", padding: "14px", marginTop: "6px", marginBottom: "4px", border: "1px solid #D1D5DB", borderRadius: "12px", fontSize: "16px", background: "#FFFFFF" };
+const buttonStyle = { width: "100%", padding: "15px", border: 0, borderRadius: "999px", background: "#0B63F6", color: "#FFFFFF", fontWeight: 700, fontSize: "16px", cursor: "pointer", marginTop: "18px" };
+const supportStyle = { display: "block", width: "100%", boxSizing: "border-box" as const, textAlign: "center" as const, padding: "15px", borderRadius: "999px", background: "#1FB6A6", color: "#FFFFFF", fontWeight: 700, textDecoration: "none", marginTop: "12px" };
 
 function getQueryValue(rawValue: string | string[] | undefined): string {
   if (Array.isArray(rawValue)) return rawValue[0] || "";
@@ -92,13 +38,29 @@ export default function TransferPage() {
   const text = transferCopy(language);
   const qrSourceId = getQueryValue(router.query.qrSourceId);
   const [form, setForm] = useState<TransferFormState>(initialTransferFormState);
+  const [routePrices, setRoutePrices] = useState<TransferRoutePrice[]>([]);
   const [status, setStatus] = useState<string>("");
   const [requestCode, setRequestCode] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const livePrices = routePrices.length ? routePrices : undefined;
   const route = buildTransferRoute(form);
-  const priceSummary = getTransferPriceSummary(form);
+  const priceSummary = getTransferPriceSummary(form, livePrices);
   const priceRangeText = formatTransferPriceRange(priceSummary);
   const providerCountLabel = priceSummary ? (language === "tr" ? `${priceSummary.providerCount} uygun araç` : `${priceSummary.providerCount} available vehicles`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPrices() {
+      try {
+        const prices = await listPublicTransferRoutePrices();
+        if (isMounted) setRoutePrices(prices);
+      } catch (error) {
+        if (isMounted) setRoutePrices([]);
+      }
+    }
+    loadPrices();
+    return () => { isMounted = false; };
+  }, []);
 
   async function submitTransferRequest() {
     const error = validateTransferForm(form);
@@ -110,7 +72,7 @@ export default function TransferPage() {
     setIsSubmitting(true);
     try {
       const code = createTransferRequestCode();
-      const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined, language);
+      const payload = mapTransferFormToRequest(form, code, qrSourceId || undefined, language, routePrices);
       await createTransferRequest(payload);
       setRequestCode(code);
       setStatus(text.success);
