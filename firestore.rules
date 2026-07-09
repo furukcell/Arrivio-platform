@@ -34,6 +34,18 @@ service cloud.firestore {
       return isProvider() && resource.data.assignedProviderId == providerId();
     }
 
+    function isOwnProviderPrice() {
+      return isProvider() && resource.data.providerId == providerId();
+    }
+
+    function isOwnProviderPriceCreate() {
+      return isProvider() && request.resource.data.providerId == providerId();
+    }
+
+    function isPublicActiveVerifiedPrice() {
+      return resource.data.isActive == true && resource.data.isVerified == true;
+    }
+
     function providerStatusAllowed() {
       return request.resource.data.status in ["confirmed", "passenger_waiting", "passenger_picked_up", "completed", "cancelled"];
     }
@@ -99,6 +111,24 @@ service cloud.firestore {
     match /providers/{providerDocId} {
       allow read: if isAdmin() || (isProvider() && providerId() == providerDocId);
       allow create, update, delete: if isAdmin();
+    }
+
+    match /transferRoutePrices/{priceId} {
+      allow read: if isAdmin() || isOwnProviderPrice() || isPublicActiveVerifiedPrice();
+      allow create: if isAdmin() || isOwnProviderPriceCreate();
+      allow update, delete: if isAdmin() || isOwnProviderPrice();
+    }
+
+    match /carRentalDailyPrices/{priceId} {
+      allow read: if isAdmin() || isOwnProviderPrice() || isPublicActiveVerifiedPrice();
+      allow create: if isAdmin() || isOwnProviderPriceCreate();
+      allow update, delete: if isAdmin() || isOwnProviderPrice();
+    }
+
+    match /hotelNightlyPrices/{priceId} {
+      allow read: if isAdmin() || isOwnProviderPrice() || isPublicActiveVerifiedPrice();
+      allow create: if isAdmin() || isOwnProviderPriceCreate();
+      allow update, delete: if isAdmin() || isOwnProviderPrice();
     }
 
     match /transferRequests/{requestId} {
