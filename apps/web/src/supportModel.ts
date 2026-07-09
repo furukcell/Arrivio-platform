@@ -31,9 +31,10 @@ export function translateFormMessage(language: WebLanguage, message: string): st
   if (language === "en") return message;
 
   const messages: Record<string, string> = {
+    "Transfer direction is required.": "Transfer yönü zorunludur.",
     "Passenger name is required.": "Yolcu adı zorunludur.",
     "Passenger phone is required.": "Telefon numarası zorunludur.",
-    "Destination is required.": "Varış noktası zorunludur.",
+    "Destination is required.": "Bölge zorunludur.",
     "Passenger count must be at least 1.": "Yolcu sayısı en az 1 olmalıdır.",
     "Pickup location is required.": "Teslim alma yeri zorunludur.",
     "Pickup date is required.": "Alış tarihi zorunludur.",
