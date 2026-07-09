@@ -4,9 +4,12 @@ import { whatsappSupportUrl } from "../supportModel";
 import { hotelCopy, rentalCopy, ticketCopy, transferCopy } from "../webCopy";
 import type { HomeCopy, TabKey } from "../landingContent";
 import {
+  buildTransferRoute,
   estimateTransferPrice,
   TRANSFER_DESTINATION_OPTIONS,
+  TRANSFER_DIRECTION_OPTIONS,
   TRANSFER_VEHICLE_OPTIONS,
+  type TransferDirection,
   type TransferFormState,
   type TransferVehicleClass
 } from "../transferFormModel";
@@ -100,11 +103,14 @@ export function RequestPanel({
   const activeSending = activeTab === "transfer" ? transferText.sending : activeTab === "rental" ? rentalText.sending : activeTab === "hotel" ? hotelText.sending : ticketText.sending;
   const tabItems: Array<[TabKey, string]> = [["transfer", home.tabs.transfer], ["rental", home.tabs.rental], ["hotel", home.tabs.hotel], ["ticket", home.tabs.ticket]];
   const transferEstimatedPrice = estimateTransferPrice(transferForm);
+  const transferRoute = buildTransferRoute(transferForm);
   const priceLabel = language === "tr" ? "Tahmini ücret" : "Estimated price";
-  const routeStepTitle = language === "tr" ? "Transferini seç" : "Choose your transfer";
+  const routeStepTitle = language === "tr" ? "Transfer yönünü ve rotanı seç" : "Choose direction and route";
   const contactStepTitle = language === "tr" ? "Son bilgileri bırak" : "Add final details";
-  const routeHelper = language === "tr" ? "Önce rota, tarih, saat ve araç tipini seç. Sonra sadece iletişim bilgini bırak." : "Pick route, date, time and vehicle first. Then leave only your contact details.";
-  const priceHelper = language === "tr" ? "Bu tutar bilgilendirme amaçlıdır. Net fiyat sağlayıcı onayıyla kesinleşir." : "This is an indicative price. Final price is confirmed by the provider.";
+  const routeHelper = language === "tr" ? "Havalimanından çıkış mı, yoksa bölgeden havalimanına geliş mi olduğunu seç. Sonra bölge, tarih, saat ve araç tipini belirle." : "Choose whether the trip starts from the airport or goes to the airport. Then select area, date, time and vehicle type.";
+  const priceHelper = language === "tr" ? `Rota: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Net fiyat sağlayıcı onayıyla kesinleşir.` : `Route: ${transferRoute.routeFrom} → ${transferRoute.routeTo}. Final price is confirmed by the provider.`;
+  const directionLabel = language === "tr" ? "Transfer yönü" : "Transfer direction";
+  const destinationLabel = transferForm.transferDirection === "to_airport" ? (language === "tr" ? "Nereden alınacak?" : "Pickup area") : transferText.destination;
   const pickupDateLabel = language === "tr" ? "Alış tarihi" : "Pickup date";
   const pickupTimeLabel = language === "tr" ? "Alış saati" : "Pickup time";
   const vehicleLabel = language === "tr" ? "Araç tipi" : "Vehicle type";
@@ -118,7 +124,12 @@ export function RequestPanel({
         <div className="transferFlow">
           <div className="transferStep" style={transferStepStyle}><span style={transferStepBadgeStyle}>1</span><div><b>{routeStepTitle}</b><p>{routeHelper}</p></div></div>
           <div className="formGrid transferSelectionGrid" style={transferSelectionGridStyle}>
-            <Field label={transferText.destination}>
+            <Field label={directionLabel}>
+              <Select value={transferForm.transferDirection} onChange={(value) => setTransferForm((current) => ({ ...current, transferDirection: value as TransferDirection }))}>
+                {TRANSFER_DIRECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+              </Select>
+            </Field>
+            <Field label={destinationLabel}>
               <Select value={transferForm.destination} onChange={(value) => setTransferForm((current) => ({ ...current, destination: value }))}>
                 {TRANSFER_DESTINATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
               </Select>
