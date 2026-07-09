@@ -44,7 +44,8 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
     try {
       await loginWithEmail(email.trim(), password);
-      setStatus("Login successful. Open /transfers or /providers.");
+      setStatus("Login successful. Opening admin dashboard...");
+      window.location.href = "/";
     } catch (error) {
       setStatus("Login failed. Check email and password.");
     } finally {
@@ -63,6 +64,6 @@ export default function AdminLoginPage() {
     createElement("input", { style: inputStyle, type: "password", value: password, onChange: (event) => setPassword(event.currentTarget.value), placeholder: "Password" }),
     createElement("br"),
     createElement("button", { type: "button", onClick: submitLogin, disabled: isSubmitting, style: buttonStyle }, isSubmitting ? "Signing in..." : "Sign In"),
-    createElement("p", { style: { color: "#4B5563", marginTop: "18px" } }, "After login, open /transfers or /providers. Admin role is read from users/{uid}.role.")
+    createElement("p", { style: { color: "#4B5563", marginTop: "18px" } }, "After login, admin role is read from users/{uid}.role and the admin dashboard opens automatically.")
   );
 }
