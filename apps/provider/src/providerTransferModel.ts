@@ -5,14 +5,22 @@ export function getProviderIdFromQuery(rawValue: string | string[] | undefined):
   return rawValue || "";
 }
 
+export function formatTransferRoute(request: TransferRequest): string {
+  if (request.routeFrom && request.routeTo) return `${request.routeFrom} → ${request.routeTo}`;
+  if (request.transferDirection === "to_airport") return `${request.destination} → ${request.airportCode}`;
+  return `${request.airportCode} → ${request.destination}`;
+}
+
 export function formatTransferTitle(request: TransferRequest): string {
-  return `${request.requestCode} - ${request.destination}`;
+  return `${request.requestCode} - ${formatTransferRoute(request)}`;
 }
 
 export function formatPassengerSummary(request: TransferRequest): string {
   const bags = typeof request.bags === "number" ? `${request.bags} bags` : "bags not set";
   const flight = request.flightCode ? `Flight ${request.flightCode}` : "No flight code";
-  return `${request.passengerName} / ${request.passengers} passengers / ${bags} / ${flight}`;
+  const pickup = request.pickupDate || request.pickupTime ? `Pickup ${request.pickupDate || "date not set"} ${request.pickupTime || "time not set"}` : "Pickup not set";
+  const vehicle = request.vehicleClass ? `Vehicle ${request.vehicleClass}` : "Vehicle not set";
+  return `${request.passengerName} / ${pickup} / ${vehicle} / ${request.passengers} passengers / ${bags} / ${flight}`;
 }
 
 export function formatContactLine(request: TransferRequest): string {
