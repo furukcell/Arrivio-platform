@@ -2,7 +2,7 @@ export type TabKey = "transfer" | "rental" | "hotel" | "ticket";
 
 export type HomeCopy = {
   top: string;
-  nav: { transfer: string; rental: string; hotels: string; flights: string; support: string; cta: string };
+  nav: { transfer: string; rental: string; hotels: string; flights: string; support: string; cta: string; partnerLogin: string };
   hero: { badge: string; title: string; description: string; primary: string; secondary: string };
   tabs: Record<TabKey, string>;
   common: { passenger: string; phone: string; flight: string; requestCode: string; support: string };
@@ -23,7 +23,7 @@ export function homeCopy(language: "tr" | "en"): HomeCopy {
   if (language === "tr") {
     return {
       top: "BJV lansmanı • Yolcudan platform ücreti yok • WhatsApp destekli hızlı talep",
-      nav: { transfer: "Transfer", rental: "Araç", hotels: "Otel", flights: "Bilet", support: "Destek", cta: "Talep Bırak" },
+      nav: { transfer: "Transfer", rental: "Araç", hotels: "Otel", flights: "Bilet", support: "Destek", cta: "Talep Bırak", partnerLogin: "Hizmet Veren Girişi" },
       hero: {
         badge: "Milas-Bodrum Havalimanı için yeni nesil yolcu hizmetleri",
         title: "İnişten sonra ihtiyacın olan her şey tek ekranda.",
@@ -67,7 +67,7 @@ export function homeCopy(language: "tr" | "en"): HomeCopy {
 
   return {
     top: "BJV launch • No passenger platform fee • WhatsApp supported requests",
-    nav: { transfer: "Transfer", rental: "Car", hotels: "Hotel", flights: "Ticket", support: "Support", cta: "Send Request" },
+    nav: { transfer: "Transfer", rental: "Car", hotels: "Hotel", flights: "Ticket", support: "Support", cta: "Send Request", partnerLogin: "Partner Login" },
     hero: {
       badge: "Next-generation passenger services for Milas-Bodrum Airport",
       title: "Everything after landing, from one screen.",
