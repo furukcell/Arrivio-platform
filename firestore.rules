@@ -56,14 +56,15 @@ service cloud.firestore {
         && request.resource.data.passengerPhone is string
         && request.resource.data.airportCode is string
         && validPublicLanguage()
-        && !request.resource.data.keys().hasAny(["assignedProviderId", "providerName", "providerNote", "adminNote", "estimatedTotalPrice", "commissionAmount"]);
+        && !request.resource.data.keys().hasAny(["assignedProviderId", "providerName", "providerNote", "adminNote", "commissionAmount"]);
     }
 
     function publicTransferCreateAllowed() {
       return publicRequestBaseAllowed("transfer")
         && request.resource.data.destination is string
         && request.resource.data.passengers is int
-        && request.resource.data.passengers >= 1;
+        && request.resource.data.passengers >= 1
+        && request.resource.data.transferDirection in ["from_airport", "to_airport"];
     }
 
     function publicCarRentalCreateAllowed() {
