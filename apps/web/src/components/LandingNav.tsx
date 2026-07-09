@@ -25,6 +25,7 @@ export function LandingNav({ home, language, chooseTab }: LandingNavProps) {
           <a href={languageHref("/", "tr")}>TR</a>
           <span>|</span>
           <a href={languageHref("/", "en")}>EN</a>
+          <a className="partnerLoginLink" href={`/partner-login?lang=${language}`}>{home.nav.partnerLogin}</a>
           <button onClick={() => chooseTab("transfer")}>{home.nav.cta}</button>
         </div>
       </header>
