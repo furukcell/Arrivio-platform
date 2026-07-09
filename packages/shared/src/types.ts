@@ -21,6 +21,9 @@ export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
 export type QrSourceType = (typeof QR_SOURCE_TYPES)[number];
 export type TransferDirection = "from_airport" | "to_airport";
 export type TransferVehicleClass = "economic" | "vip" | "minibus" | "luxury";
+export type CarRentalClass = "economic" | "middle" | "suv" | "luxury";
+export type CarRentalTransmission = "manual" | "automatic";
+export type HotelAccommodationType = "airport_hotel" | "bodrum_center" | "apart_pension" | "family_room" | "luxury_hotel";
 
 export interface AppUser {
   id?: string;
@@ -95,8 +98,32 @@ export interface CarRentalRequest extends BaseRequest {
   dropoffLocation?: string;
   pickupDate: string;
   dropoffDate: string;
-  carClass?: "economic" | "middle" | "suv" | "luxury";
-  transmission?: "manual" | "automatic";
+  pickupTime?: string;
+  dropoffTime?: string;
+  carClass?: CarRentalClass;
+  transmission?: CarRentalTransmission;
+  passengers?: number;
+  estimatedDailyPriceMin?: number;
+  estimatedDailyPriceMax?: number;
+  estimatedRentalDays?: number;
+  matchedVehicleCount?: number;
+}
+
+export interface CarRentalDailyPrice {
+  id?: string;
+  providerId: string;
+  airportCode: "BJV" | string;
+  pickupLocation: string;
+  carClass: CarRentalClass;
+  transmission: CarRentalTransmission;
+  dailyPrice: number;
+  currency: "TRY" | "EUR" | "USD" | "GBP";
+  airportDelivery: boolean;
+  depositAmount?: number;
+  isActive: boolean;
+  isVerified?: boolean;
+  updatedAt?: unknown;
+  createdAt?: unknown;
 }
 
 export interface HotelRequest extends BaseRequest {
@@ -108,6 +135,26 @@ export interface HotelRequest extends BaseRequest {
   rooms?: number;
   radiusKm?: number;
   wantsTransfer?: boolean;
+  accommodationType?: HotelAccommodationType;
+  estimatedNightlyPriceMin?: number;
+  estimatedNightlyPriceMax?: number;
+  estimatedNightCount?: number;
+  matchedHotelCount?: number;
+}
+
+export interface HotelNightlyPrice {
+  id?: string;
+  providerId: string;
+  airportCode: "BJV" | string;
+  accommodationType: HotelAccommodationType;
+  nightlyPrice: number;
+  currency: "TRY" | "EUR" | "USD" | "GBP";
+  maxGuests?: number;
+  hasTransfer?: boolean;
+  isActive: boolean;
+  isVerified?: boolean;
+  updatedAt?: unknown;
+  createdAt?: unknown;
 }
 
 export interface TicketRequest extends BaseRequest {
