@@ -1,5 +1,5 @@
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import type { AppUser, UserRole } from "@arrivio/shared";
+import type { AppUser, ProviderType, UserRole } from "@arrivio/shared";
 import { getFirestoreDb } from "./client";
 import { COLLECTIONS } from "./collections";
 
@@ -7,6 +7,7 @@ export type UpsertAppUserPayload = {
   uid: string;
   role: UserRole;
   providerId?: string;
+  providerType?: ProviderType;
   email?: string;
   displayName?: string;
 };
