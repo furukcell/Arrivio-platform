@@ -1,6 +1,6 @@
 import type { HotelRequest } from "@arrivio/shared";
 import type { WebLanguage } from "./supportModel";
-import type { HotelFormState } from "./hotelFormModel";
+import { estimateHotelNightlyPrice, getHotelPriceSummary, type HotelFormState } from "./hotelFormModel";
 
 export function mapHotelFormToRequest(
   state: HotelFormState,
@@ -8,6 +8,10 @@ export function mapHotelFormToRequest(
   qrSourceId?: string,
   languageOverride?: WebLanguage
 ): Omit<HotelRequest, "id" | "createdAt" | "updatedAt"> {
+  const priceSummary = getHotelPriceSummary(state);
+  const estimatedNightlyPrice = priceSummary?.minNightlyPrice ?? estimateHotelNightlyPrice(state);
+  const nightCount = priceSummary?.nightCount ?? 1;
+
   return {
     type: "hotel",
     requestCode,
@@ -23,6 +27,12 @@ export function mapHotelFormToRequest(
     rooms: state.rooms,
     radiusKm: state.radiusKm,
     wantsTransfer: state.wantsTransfer,
+    accommodationType: state.accommodationType,
+    estimatedNightlyPriceMin: priceSummary?.minNightlyPrice ?? estimatedNightlyPrice,
+    estimatedNightlyPriceMax: priceSummary?.maxNightlyPrice ?? estimatedNightlyPrice,
+    estimatedNightCount: nightCount,
+    matchedHotelCount: priceSummary?.hotelCount ?? 0,
+    estimatedTotalPrice: estimatedNightlyPrice * nightCount * state.rooms,
     status: "new",
     currency: "TRY",
     commissionStatus: "pending"
