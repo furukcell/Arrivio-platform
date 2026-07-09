@@ -1,6 +1,6 @@
 import type { TransferRequest } from "@arrivio/shared";
 import type { WebLanguage } from "./supportModel";
-import type { TransferFormState } from "./transferFormModel";
+import { estimateTransferPrice, type TransferFormState } from "./transferFormModel";
 
 export function mapTransferFormToRequest(
   state: TransferFormState,
@@ -19,10 +19,12 @@ export function mapTransferFormToRequest(
     destination: state.destination.trim(),
     passengers: state.passengers,
     bags: state.bags,
+    vehicleClass: state.vehicleClass,
     pickupDate: state.pickupDate || undefined,
     pickupTime: state.pickupTime || undefined,
     status: "new",
     qrSourceId,
+    estimatedTotalPrice: estimateTransferPrice(state),
     currency: "TRY",
     commissionStatus: "pending"
   };
