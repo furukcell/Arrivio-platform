@@ -19,6 +19,7 @@ export type HotelStatus = (typeof HOTEL_STATUSES)[number];
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
 export type QrSourceType = (typeof QR_SOURCE_TYPES)[number];
+export type TransferDirection = "from_airport" | "to_airport";
 
 export interface AppUser {
   id?: string;
@@ -56,6 +57,10 @@ export interface BaseRequest {
 export interface TransferRequest extends BaseRequest {
   type: "transfer";
   status: TransferStatus;
+  transferDirection?: TransferDirection;
+  routeFrom?: string;
+  routeTo?: string;
+  pickupLocation?: string;
   destination: string;
   passengers: number;
   bags?: number;
