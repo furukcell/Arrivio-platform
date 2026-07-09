@@ -64,6 +64,14 @@ const priceSummaryStyle: CSSProperties = {
   border: "1px solid #c7f2e7"
 };
 
+const transferSelectionGridStyle: CSSProperties = {
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
+};
+
+const transferContactGridStyle: CSSProperties = {
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))"
+};
+
 export function RequestPanel({
   home,
   language,
@@ -109,7 +117,7 @@ export function RequestPanel({
       {activeTab === "transfer" ? (
         <div className="transferFlow">
           <div className="transferStep" style={transferStepStyle}><span style={transferStepBadgeStyle}>1</span><div><b>{routeStepTitle}</b><p>{routeHelper}</p></div></div>
-          <div className="formGrid transferSelectionGrid" style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}>
+          <div className="formGrid transferSelectionGrid" style={transferSelectionGridStyle}>
             <Field label={transferText.destination}>
               <Select value={transferForm.destination} onChange={(value) => setTransferForm((current) => ({ ...current, destination: value }))}>
                 {TRANSFER_DESTINATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
@@ -130,7 +138,7 @@ export function RequestPanel({
             <p>{priceHelper}</p>
           </div>
           <div className="transferStep" style={{ ...transferStepStyle, paddingTop: 0 }}><span style={transferStepBadgeStyle}>2</span><div><b>{contactStepTitle}</b><p>{language === "tr" ? "Talebi göndermek için ad, telefon ve varsa uçuş kodunu yaz." : "Enter name, phone and flight code if available to send the request."}</p></div></div>
-          <div className="formGrid transferContactGrid" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr)) 200px" }}>
+          <div className="formGrid transferContactGrid" style={transferContactGridStyle}>
             <Field label={home.common.passenger}><Input value={transferForm.passengerName} placeholder={transferText.passengerPlaceholder} onChange={(value) => setTransferForm((current) => ({ ...current, passengerName: value }))} /></Field>
             <Field label={home.common.phone}><Input value={transferForm.passengerPhone} placeholder="+90 5xx xxx xx xx" onChange={(value) => setTransferForm((current) => ({ ...current, passengerPhone: value }))} /></Field>
             <Field label={home.common.flight}><Input value={transferForm.flightCode} placeholder="TK2524" onChange={(value) => setTransferForm((current) => ({ ...current, flightCode: value }))} /></Field>
