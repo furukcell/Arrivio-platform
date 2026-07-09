@@ -5,13 +5,17 @@ export function formatTransferTitle(request: TransferRequest): string {
 }
 
 export function formatTransferRoute(request: TransferRequest): string {
-  return `${request.airportCode} to ${request.destination}`;
+  if (request.routeFrom && request.routeTo) return `${request.routeFrom} → ${request.routeTo}`;
+  if (request.transferDirection === "to_airport") return `${request.destination} → ${request.airportCode}`;
+  return `${request.airportCode} → ${request.destination}`;
 }
 
 export function formatTransferMeta(request: TransferRequest): string {
   const flight = request.flightCode ? `Flight ${request.flightCode}` : "No flight code";
   const bags = typeof request.bags === "number" ? `${request.bags} bags` : "Bags not set";
-  return `${flight} / ${request.passengers} passengers / ${bags}`;
+  const pickup = request.pickupDate || request.pickupTime ? `Pickup ${request.pickupDate || "date not set"} ${request.pickupTime || "time not set"}` : "Pickup not set";
+  const vehicle = request.vehicleClass ? `Vehicle ${request.vehicleClass}` : "Vehicle not set";
+  return `${pickup} / ${vehicle} / ${flight} / ${request.passengers} passengers / ${bags}`;
 }
 
 export function formatProviderInfo(request: TransferRequest): string {
