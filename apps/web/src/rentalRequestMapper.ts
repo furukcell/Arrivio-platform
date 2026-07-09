@@ -1,4 +1,4 @@
-import type { CarRentalRequest } from "@arrivio/shared";
+import type { CarRentalDailyPrice, CarRentalRequest } from "@arrivio/shared";
 import type { WebLanguage } from "./supportModel";
 import { estimateCarRentalDailyPrice, getCarRentalPriceSummary, type CarRentalFormState } from "./carRentalFormModel";
 
@@ -6,9 +6,10 @@ export function mapRentalFormToRequest(
   state: CarRentalFormState,
   requestCode: string,
   qrSourceId?: string,
-  languageOverride?: WebLanguage
+  languageOverride?: WebLanguage,
+  dailyPrices?: CarRentalDailyPrice[]
 ): Omit<CarRentalRequest, "id" | "createdAt" | "updatedAt"> {
-  const priceSummary = getCarRentalPriceSummary(state);
+  const priceSummary = getCarRentalPriceSummary(state, dailyPrices);
   const estimatedDailyPrice = priceSummary?.minDailyPrice ?? estimateCarRentalDailyPrice(state);
   const rentalDays = priceSummary?.rentalDays ?? 1;
 
