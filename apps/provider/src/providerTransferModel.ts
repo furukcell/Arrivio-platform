@@ -23,6 +23,16 @@ export function formatPassengerSummary(request: TransferRequest): string {
   return `${request.passengerName} / ${pickup} / ${vehicle} / ${request.passengers} passengers / ${bags} / ${flight}`;
 }
 
+export function formatTransferPriceRange(request: TransferRequest): string {
+  if (typeof request.estimatedPriceMin === "number" && typeof request.estimatedPriceMax === "number") {
+    if (request.estimatedPriceMin === request.estimatedPriceMax) return `${request.estimatedPriceMin} ${request.currency}`;
+    return `${request.estimatedPriceMin} - ${request.estimatedPriceMax} ${request.currency}`;
+  }
+
+  if (typeof request.estimatedTotalPrice === "number") return `${request.estimatedTotalPrice} ${request.currency}`;
+  return `not set ${request.currency}`;
+}
+
 export function formatContactLine(request: TransferRequest): string {
   return `Phone: ${request.passengerPhone}`;
 }
