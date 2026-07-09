@@ -117,6 +117,15 @@ body {
   text-decoration: none;
 }
 
+.partnerLoginLink {
+  border: 1px solid #bdeee3;
+  background: #ecfffb;
+  color: #087f68 !important;
+  border-radius: 12px;
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
 .rightNav button,
 .heroActions button,
 .submitBtn {
@@ -258,87 +267,77 @@ body {
 .mockBubble {
   position: relative;
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.10);
 }
 
 .mockTop {
-  border-radius: 24px;
-  padding: 18px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-}
-
-.mockTop span {
-  background: #075ee8;
-  color: white;
-  border-radius: 999px;
-  padding: 8px 12px;
+  padding: 18px;
+  border-radius: 24px;
+  color: #071631;
   font-weight: 950;
 }
 
-.mockTop b,
-.mockCard strong {
-  color: #071631;
+.mockTop span {
+  color: #075ee8;
 }
 
 .mockCard.main {
   margin-top: 22px;
-  border-radius: 28px;
   padding: 24px;
+  border-radius: 28px;
+  color: #071631;
+  box-shadow: 0 18px 50px rgba(7, 27, 88, 0.14);
 }
 
 .mockCard strong {
+  display: block;
   font-size: 28px;
 }
 
-.mockCard p {
+.mockCard p,
+.mockGrid p {
   color: #64748b;
-}
-
-.mockCard em {
-  display: inline-block;
-  background: #e8fff7;
-  color: #098766;
-  border-radius: 999px;
-  padding: 8px 10px;
-  font-style: normal;
-  font-weight: 950;
 }
 
 .mockGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .mockGrid div {
   border-radius: 20px;
-  padding: 18px;
-  text-align: center;
-  font-weight: 950;
+  padding: 16px;
+}
+
+.mockGrid b {
   color: #075ee8;
 }
 
 .mockBubble {
   position: absolute;
   right: 26px;
-  bottom: 26px;
+  bottom: 24px;
   border-radius: 999px;
-  padding: 14px 18px;
-  color: #071631;
+  padding: 13px 18px;
+  color: #075ee8;
   font-weight: 950;
 }
 
-.requestPanel {
+.requestPanel,
+.marketingSection,
+.footer {
   max-width: 1180px;
-  margin: 18px auto 28px;
-  background: white;
-  border: 1px solid rgba(198, 221, 248, 0.95);
-  border-radius: 30px;
-  box-shadow: 0 28px 80px rgba(7, 27, 88, 0.14), 0 0 0 10px rgba(255, 255, 255, 0.45);
+}
+
+.requestPanel {
+  margin: 24px auto;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(196, 218, 244, 0.92);
+  border-radius: 32px;
+  box-shadow: 0 26px 78px rgba(7, 27, 88, 0.11);
   overflow: hidden;
 }
 
@@ -346,63 +345,43 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 24px 28px;
-  background:
-    radial-gradient(420px 160px at 92% 5%, rgba(24, 182, 255, 0.16), transparent 70%),
-    linear-gradient(90deg, #ffffff, #eef7ff);
+  padding: 30px 32px 16px;
 }
 
-.panelHead span,
-.sectionTitle span,
-.processText span,
-.revenue span {
-  display: inline-flex;
+.panelHead span {
   color: #075ee8;
-  background: #eaf4ff;
-  border-radius: 999px;
-  padding: 7px 10px;
   font-weight: 950;
-  font-size: 12px;
 }
 
 .panelHead h2 {
-  margin: 10px 0 4px;
-  font-size: 30px;
+  font-size: 36px;
+  margin: 4px 0 6px;
 }
 
 .panelHead p {
-  margin: 0;
   color: #64748b;
+  margin: 0;
 }
 
 .panelHead a {
-  white-space: nowrap;
-  text-decoration: none;
-  color: #087f68;
-  background: #e9fbf6;
-  border: 1px solid #c7f2e7;
-  border-radius: 999px;
-  padding: 12px 16px;
+  color: #075ee8;
   font-weight: 950;
+  text-decoration: none;
 }
 
 .tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 10px;
-  background: #eaf3ff;
   gap: 8px;
-  border-top: 1px solid #e7eef8;
-  border-bottom: 1px solid #e7eef8;
+  padding: 0 28px 18px;
 }
 
 .tabs button {
-  height: 52px;
-  border: 0;
+  border: 1px solid #dbe8f7;
+  background: white;
+  color: #071631;
+  padding: 14px;
   border-radius: 16px;
-  background: transparent;
-  color: #455873;
   font-weight: 950;
   cursor: pointer;
 }
@@ -410,103 +389,77 @@ body {
 .tabs button.active {
   background: #075ee8;
   color: white;
-  box-shadow: 0 14px 30px rgba(7, 94, 232, 0.22);
+  border-color: #075ee8;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr) 200px;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  padding: 22px 28px 26px;
-  align-items: end;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 0 28px 28px;
 }
 
-.field label {
-  font-size: 12px;
-  font-weight: 950;
-  display: block;
-  margin-bottom: 8px;
-  color: #071631;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 850;
+  color: #1f2d47;
 }
 
-.field input {
-  width: 100%;
-  height: 50px;
+.field input,
+.field select {
+  min-height: 50px;
   border: 1px solid #c8d9ed;
   border-radius: 14px;
   padding: 0 14px;
   font-size: 14px;
   background: white;
   color: #071631;
-  outline: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 18px rgba(7, 27, 58, 0.04);
-}
-
-.field input:focus {
-  border-color: #075ee8;
-  box-shadow: 0 0 0 4px rgba(7, 94, 232, 0.10);
 }
 
 .submitBtn {
-  height: 50px;
+  min-height: 52px;
   border-radius: 14px;
-  box-shadow: 0 16px 34px rgba(7, 94, 232, 0.20);
+  align-self: end;
+  box-shadow: 0 14px 28px rgba(7, 94, 232, 0.18);
 }
 
 .status {
-  margin: 0 28px 26px;
-  padding: 14px 16px;
+  margin: 0 28px 28px;
+  background: #ecfffb;
+  color: #087f68;
+  border: 1px solid #bdeee3;
   border-radius: 16px;
-  background: #f0f7ff;
-  color: #075ee8;
+  padding: 14px;
   font-weight: 900;
 }
 
 .status b {
   display: block;
   margin-top: 6px;
-  color: #071631;
 }
 
-.section {
-  max-width: 1180px;
-  margin: 0 auto 28px;
+.marketingSection {
+  margin: 24px auto;
 }
 
-.section.modules,
-.section.benefits,
-.section.process {
-  padding: 30px;
-  border-radius: 34px;
-  border: 1px solid rgba(202, 222, 247, 0.75);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 22px 70px rgba(7, 27, 88, 0.08);
-  backdrop-filter: blur(12px);
-}
-
-.sectionTitle {
+.sectionHead {
   text-align: center;
-  max-width: 700px;
-  margin: 0 auto 20px;
+  margin: 54px 0 24px;
 }
 
-.sectionTitle h2,
-.processText h2,
+.sectionHead h2,
 .revenue h2 {
-  font-size: 38px;
-  line-height: 1.05;
-  letter-spacing: -1.4px;
-  margin: 12px 0;
-  color: #061334;
+  font-size: 40px;
+  margin: 0 0 8px;
 }
 
-.sectionTitle p,
-.processText p,
+.sectionHead p,
 .revenue p {
   color: #64748b;
+  margin: 0;
   font-size: 17px;
-  line-height: 1.5;
 }
 
 .moduleGrid,
@@ -516,7 +469,10 @@ body {
   gap: 16px;
 }
 
-.moduleGrid,
+.moduleGrid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .benefitGrid {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -678,8 +634,10 @@ body {
   }
 
   .navbar {
-    height: 66px;
-    padding: 0 16px;
+    height: auto;
+    min-height: 66px;
+    padding: 10px 16px;
+    gap: 10px;
   }
 
   .brand {
@@ -695,6 +653,16 @@ body {
   .desktopNav,
   .rightNav button {
     display: none;
+  }
+
+  .rightNav {
+    gap: 7px;
+    font-size: 12px;
+  }
+
+  .partnerLoginLink {
+    padding: 9px 10px;
+    border-radius: 10px;
   }
 
   .hero {
@@ -760,124 +728,50 @@ body {
     gap: 8px;
   }
 
-  .mockGrid div {
-    padding: 12px 6px;
+  .requestPanel,
+  .marketingSection,
+  .footer {
+    margin-left: 14px;
+    margin-right: 14px;
   }
 
-  .mockBubble {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    margin-top: 12px;
-    text-align: center;
-  }
-
-  .requestPanel {
-    margin: 12px 14px 24px;
-    border-radius: 26px;
-    box-shadow: 0 24px 64px rgba(7, 27, 88, 0.12);
-  }
-
-  .panelHead {
-    display: block;
-    padding: 20px;
-  }
-
-  .panelHead h2 {
-    font-size: 26px;
-  }
-
-  .panelHead a {
-    display: inline-block;
-    margin-top: 14px;
-  }
-
-  .tabs {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    padding: 8px;
-  }
-
-  .tabs button {
-    font-size: 12px;
-    height: 48px;
-    border-radius: 13px;
-  }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-    padding: 18px;
-    gap: 12px;
-  }
-
-  .field input {
-    height: 52px;
-    border-radius: 14px;
-    font-size: 15px;
-  }
-
-  .submitBtn {
-    height: 54px;
-    border-radius: 14px;
-  }
-
-  .status {
-    margin: 0 18px 20px;
-  }
-
-  .section {
-    margin: 0 14px 26px;
-  }
-
-  .section.modules,
-  .section.benefits,
-  .section.process {
-    padding: 20px;
-    border-radius: 28px;
-  }
-
-  .sectionTitle {
-    text-align: left;
-  }
-
-  .sectionTitle h2,
-  .processText h2,
-  .revenue h2 {
-    font-size: 30px;
-  }
-
-  .moduleGrid,
-  .benefitGrid,
-  .stepGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .moduleGrid button,
-  .benefitGrid div,
-  .stepGrid div {
-    padding: 20px;
-    border-radius: 22px;
-  }
-
+  .panelHead,
+  .footer,
+  .revenue,
   .process {
     display: block;
   }
 
+  .panelHead {
+    padding: 22px 18px 12px;
+  }
+
+  .panelHead h2,
+  .sectionHead h2,
+  .revenue h2 {
+    font-size: 29px;
+  }
+
+  .tabs,
+  .formGrid,
+  .moduleGrid,
+  .benefitGrid,
+  .stepGrid,
   .revenue {
     grid-template-columns: 1fr;
-    margin: 0 14px 26px;
-    border-radius: 26px;
-    padding: 24px;
+  }
+
+  .tabs,
+  .formGrid {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .submitBtn {
+    min-height: 54px;
   }
 
   .footer {
-    margin: 0 14px 28px;
-    display: block;
-    border-radius: 24px;
-  }
-
-  .footer a {
-    display: inline-block;
-    margin-top: 14px;
+    padding: 22px;
   }
 }
