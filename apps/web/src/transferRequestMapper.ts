@@ -1,4 +1,4 @@
-import type { TransferRequest } from "@arrivio/shared";
+import type { TransferRequest, TransferRoutePrice } from "@arrivio/shared";
 import type { WebLanguage } from "./supportModel";
 import { buildTransferRoute, estimateTransferPrice, getTransferPriceSummary, type TransferFormState } from "./transferFormModel";
 
@@ -6,10 +6,11 @@ export function mapTransferFormToRequest(
   state: TransferFormState,
   requestCode: string,
   qrSourceId?: string,
-  languageOverride?: WebLanguage
+  languageOverride?: WebLanguage,
+  routePrices?: TransferRoutePrice[]
 ): Omit<TransferRequest, "id" | "createdAt" | "updatedAt"> {
   const route = buildTransferRoute(state);
-  const priceSummary = getTransferPriceSummary(state);
+  const priceSummary = getTransferPriceSummary(state, routePrices);
   const estimatedPrice = priceSummary?.minPrice ?? estimateTransferPrice(state);
 
   return {
