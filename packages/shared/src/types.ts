@@ -30,6 +30,7 @@ export interface AppUser {
   uid: string;
   role: UserRole;
   providerId?: string;
+  providerType?: ProviderType;
   email?: string;
   displayName?: string;
   createdAt?: unknown;
