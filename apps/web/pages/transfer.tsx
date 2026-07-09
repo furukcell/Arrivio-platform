@@ -4,7 +4,8 @@ import { createTransferRequest } from "@arrivio/firebase";
 import {
   buildTransferRoute,
   createTransferRequestCode,
-  estimateTransferPrice,
+  formatTransferPriceRange,
+  getTransferPriceSummary,
   initialTransferFormState,
   TRANSFER_DESTINATION_OPTIONS,
   TRANSFER_DIRECTION_OPTIONS,
@@ -94,8 +95,10 @@ export default function TransferPage() {
   const [status, setStatus] = useState<string>("");
   const [requestCode, setRequestCode] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const estimatedPrice = estimateTransferPrice(form);
   const route = buildTransferRoute(form);
+  const priceSummary = getTransferPriceSummary(form);
+  const priceRangeText = formatTransferPriceRange(priceSummary);
+  const providerCountLabel = priceSummary ? (language === "tr" ? `${priceSummary.providerCount} uygun araç` : `${priceSummary.providerCount} available vehicles`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
 
   async function submitTransferRequest() {
     const error = validateTransferForm(form);
@@ -168,10 +171,11 @@ export default function TransferPage() {
 
         <div style={{ display: "flex", justifyContent: "space-between", gap: "14px", alignItems: "center", padding: "16px", borderRadius: "18px", background: "#E9FBF6", marginTop: "18px" }}>
           <div>
-            <span style={{ color: "#087F68", fontWeight: 700 }}>{language === "tr" ? "Tahmini ücret" : "Estimated price"}</span>
-            <strong style={{ display: "block", fontSize: "30px", marginTop: "4px" }}>{estimatedPrice.toLocaleString("tr-TR")} TL</strong>
+            <span style={{ color: "#087F68", fontWeight: 700 }}>{language === "tr" ? "Tahmini fiyat aralığı" : "Estimated price range"}</span>
+            <strong style={{ display: "block", fontSize: "30px", marginTop: "4px" }}>{priceRangeText}</strong>
+            <small style={{ display: "block", marginTop: "4px", color: "#087F68", fontWeight: 700 }}>{providerCountLabel}</small>
           </div>
-          <p style={{ margin: 0, color: "#4B5563", maxWidth: "420px" }}>{language === "tr" ? `Rota: ${route.routeFrom} → ${route.routeTo}. Net fiyat sağlayıcı onayıyla kesinleşir.` : `Route: ${route.routeFrom} → ${route.routeTo}. Final price is confirmed by the provider.`}</p>
+          <p style={{ margin: 0, color: "#4B5563", maxWidth: "420px" }}>{language === "tr" ? `Rota: ${route.routeFrom} → ${route.routeTo}. Net fiyat işi alan sağlayıcı onayıyla kesinleşir.` : `Route: ${route.routeFrom} → ${route.routeTo}. Final price is confirmed by the provider who accepts the job.`}</p>
         </div>
 
         <div style={{ padding: "16px", borderRadius: "18px", background: "#F8FAFC", marginTop: "18px" }}>
