@@ -14,8 +14,23 @@ import {
   type TransferFormState,
   type TransferVehicleClass
 } from "../transferFormModel";
-import type { CarRentalFormState } from "../carRentalFormModel";
-import type { HotelFormState } from "../hotelFormModel";
+import {
+  CAR_RENTAL_CLASS_OPTIONS,
+  CAR_RENTAL_PICKUP_OPTIONS,
+  CAR_RENTAL_TRANSMISSION_OPTIONS,
+  formatCarRentalDailyPriceRange,
+  getCarRentalPriceSummary,
+  type CarRentalClass,
+  type CarRentalFormState,
+  type CarRentalTransmission
+} from "../carRentalFormModel";
+import {
+  formatHotelNightlyPriceRange,
+  getHotelPriceSummary,
+  HOTEL_ACCOMMODATION_OPTIONS,
+  type HotelAccommodationType,
+  type HotelFormState
+} from "../hotelFormModel";
 import type { TicketFormState } from "../ticketFormModel";
 
 type RequestPanelProps = {
@@ -68,6 +83,12 @@ const priceSummaryStyle: CSSProperties = {
   border: "1px solid #c7f2e7"
 };
 
+const embeddedPriceSummaryStyle: CSSProperties = {
+  ...priceSummaryStyle,
+  gridColumn: "1 / -1",
+  margin: 0
+};
+
 const transferSelectionGridStyle: CSSProperties = {
   gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
 };
@@ -103,6 +124,7 @@ export function RequestPanel({
   const activeSubmit = activeTab === "transfer" ? transferText.submit : activeTab === "rental" ? rentalText.submit : activeTab === "hotel" ? hotelText.submit : ticketText.submit;
   const activeSending = activeTab === "transfer" ? transferText.sending : activeTab === "rental" ? rentalText.sending : activeTab === "hotel" ? hotelText.sending : ticketText.sending;
   const tabItems: Array<[TabKey, string]> = [["transfer", home.tabs.transfer], ["rental", home.tabs.rental], ["hotel", home.tabs.hotel], ["ticket", home.tabs.ticket]];
+
   const transferRoute = buildTransferRoute(transferForm);
   const priceSummary = getTransferPriceSummary(transferForm);
   const priceRangeText = formatTransferPriceRange(priceSummary);
@@ -118,6 +140,16 @@ export function RequestPanel({
   const pickupTimeLabel = language === "tr" ? "Alış saati" : "Pickup time";
   const vehicleLabel = language === "tr" ? "Araç tipi" : "Vehicle type";
   const bagsLabel = language === "tr" ? "Bagaj" : "Bags";
+
+  const rentalSummary = getCarRentalPriceSummary(rentalForm);
+  const rentalPriceText = formatCarRentalDailyPriceRange(rentalSummary);
+  const rentalVehicleCount = rentalSummary ? (language === "tr" ? `${rentalSummary.vehicleCount} uygun araç` : `${rentalSummary.vehicleCount} available cars`) : (language === "tr" ? "Uygun araç kontrol edilecek" : "Availability will be checked");
+  const rentalHelper = language === "tr" ? `Tahmini ${rentalSummary?.rentalDays || 1} gün. Net fiyat rent a car firması onayıyla kesinleşir.` : `Estimated ${rentalSummary?.rentalDays || 1} days. Final price is confirmed by the rental provider.`;
+
+  const hotelSummary = getHotelPriceSummary(hotelForm);
+  const hotelPriceText = formatHotelNightlyPriceRange(hotelSummary);
+  const hotelCount = hotelSummary ? (language === "tr" ? `${hotelSummary.hotelCount} uygun tesis` : `${hotelSummary.hotelCount} available properties`) : (language === "tr" ? "Uygun tesis kontrol edilecek" : "Availability will be checked");
+  const hotelHelper = language === "tr" ? `Tahmini ${hotelSummary?.nightCount || 1} gece. Net fiyat tesis müsaitlik onayıyla kesinleşir.` : `Estimated ${hotelSummary?.nightCount || 1} nights. Final price is confirmed after property availability.`;
 
   return (
     <section id="request-panel" className="requestPanel">
@@ -164,16 +196,52 @@ export function RequestPanel({
           {activeTab === "rental" && <>
             <Field label={home.common.passenger}><Input value={rentalForm.passengerName} placeholder={rentalText.passengerPlaceholder} onChange={(value) => setRentalForm((current) => ({ ...current, passengerName: value }))} /></Field>
             <Field label={home.common.phone}><Input value={rentalForm.passengerPhone} placeholder="+90 5xx xxx xx xx" onChange={(value) => setRentalForm((current) => ({ ...current, passengerPhone: value }))} /></Field>
-            <Field label={rentalText.pickupLocation}><Input value={rentalForm.pickupLocation} placeholder="Milas-Bodrum Airport" onChange={(value) => setRentalForm((current) => ({ ...current, pickupLocation: value }))} /></Field>
+            <Field label={home.common.flight}><Input value={rentalForm.flightCode} placeholder="TK2524" onChange={(value) => setRentalForm((current) => ({ ...current, flightCode: value }))} /></Field>
+            <Field label={rentalText.pickupLocation}>
+              <Select value={rentalForm.pickupLocation} onChange={(value) => setRentalForm((current) => ({ ...current, pickupLocation: value }))}>
+                {CAR_RENTAL_PICKUP_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+              </Select>
+            </Field>
+            <Field label={language === "tr" ? "Bırakış yeri" : "Dropoff location"}><Input value={rentalForm.dropoffLocation} placeholder={language === "tr" ? "Aynı yer veya otel" : "Same place or hotel"} onChange={(value) => setRentalForm((current) => ({ ...current, dropoffLocation: value }))} /></Field>
             <Field label={rentalText.pickupDate}><Input type="date" value={rentalForm.pickupDate} onChange={(value) => setRentalForm((current) => ({ ...current, pickupDate: value }))} /></Field>
+            <Field label={language === "tr" ? "Alış saati" : "Pickup time"}><Input type="time" value={rentalForm.pickupTime} onChange={(value) => setRentalForm((current) => ({ ...current, pickupTime: value }))} /></Field>
             <Field label={rentalText.dropoffDate}><Input type="date" value={rentalForm.dropoffDate} onChange={(value) => setRentalForm((current) => ({ ...current, dropoffDate: value }))} /></Field>
+            <Field label={language === "tr" ? "Bırakış saati" : "Dropoff time"}><Input type="time" value={rentalForm.dropoffTime} onChange={(value) => setRentalForm((current) => ({ ...current, dropoffTime: value }))} /></Field>
+            <Field label={rentalText.carClass}>
+              <Select value={rentalForm.carClass} onChange={(value) => setRentalForm((current) => ({ ...current, carClass: value as CarRentalClass }))}>
+                {CAR_RENTAL_CLASS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+              </Select>
+            </Field>
+            <Field label={language === "tr" ? "Vites" : "Transmission"}>
+              <Select value={rentalForm.transmission} onChange={(value) => setRentalForm((current) => ({ ...current, transmission: value as CarRentalTransmission }))}>
+                {CAR_RENTAL_TRANSMISSION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+              </Select>
+            </Field>
+            <Field label={language === "tr" ? "Yolcu" : "Passengers"}><Input type="number" value={String(rentalForm.passengers)} onChange={(value) => setRentalForm((current) => ({ ...current, passengers: Number(value) }))} /></Field>
+            <div className="priceSummary" style={embeddedPriceSummaryStyle}>
+              <div><span>{language === "tr" ? "Tahmini günlük fiyat" : "Estimated daily price"}</span><strong>{rentalPriceText}</strong><small style={{ display: "block", marginTop: "4px", color: "#087f68", fontWeight: 900 }}>{rentalVehicleCount}</small></div>
+              <p>{rentalHelper}</p>
+            </div>
           </>}
           {activeTab === "hotel" && <>
             <Field label={home.common.passenger}><Input value={hotelForm.passengerName} placeholder={hotelText.passengerPlaceholder} onChange={(value) => setHotelForm((current) => ({ ...current, passengerName: value }))} /></Field>
             <Field label={home.common.phone}><Input value={hotelForm.passengerPhone} placeholder="+90 5xx xxx xx xx" onChange={(value) => setHotelForm((current) => ({ ...current, passengerPhone: value }))} /></Field>
+            <Field label={home.common.flight}><Input value={hotelForm.flightCode} placeholder="TK2524" onChange={(value) => setHotelForm((current) => ({ ...current, flightCode: value }))} /></Field>
+            <Field label={language === "tr" ? "Konaklama tipi" : "Accommodation type"}>
+              <Select value={hotelForm.accommodationType} onChange={(value) => setHotelForm((current) => ({ ...current, accommodationType: value as HotelAccommodationType }))}>
+                {HOTEL_ACCOMMODATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "tr" ? option.trLabel : option.enLabel}</option>)}
+              </Select>
+            </Field>
             <Field label={hotelText.checkIn}><Input type="date" value={hotelForm.checkInDate} onChange={(value) => setHotelForm((current) => ({ ...current, checkInDate: value }))} /></Field>
             <Field label={hotelText.checkOut}><Input type="date" value={hotelForm.checkOutDate} onChange={(value) => setHotelForm((current) => ({ ...current, checkOutDate: value }))} /></Field>
             <Field label={hotelText.guests}><Input type="number" value={String(hotelForm.guests)} onChange={(value) => setHotelForm((current) => ({ ...current, guests: Number(value) }))} /></Field>
+            <Field label={hotelText.rooms}><Input type="number" value={String(hotelForm.rooms)} onChange={(value) => setHotelForm((current) => ({ ...current, rooms: Number(value) }))} /></Field>
+            <Field label={hotelText.radius}><Input type="number" value={String(hotelForm.radiusKm)} onChange={(value) => setHotelForm((current) => ({ ...current, radiusKm: Number(value) }))} /></Field>
+            <label className="field" style={{ justifyContent: "center" }}><span>{hotelText.wantsTransfer}</span><input type="checkbox" checked={hotelForm.wantsTransfer} onChange={(event) => setHotelForm((current) => ({ ...current, wantsTransfer: event.currentTarget.checked }))} /></label>
+            <div className="priceSummary" style={embeddedPriceSummaryStyle}>
+              <div><span>{language === "tr" ? "Tahmini gece fiyatı" : "Estimated nightly price"}</span><strong>{hotelPriceText}</strong><small style={{ display: "block", marginTop: "4px", color: "#087f68", fontWeight: 900 }}>{hotelCount}</small></div>
+              <p>{hotelHelper}</p>
+            </div>
           </>}
           {activeTab === "ticket" && <>
             <Field label={home.common.passenger}><Input value={ticketForm.passengerName} placeholder={ticketText.passengerPlaceholder} onChange={(value) => setTicketForm((current) => ({ ...current, passengerName: value }))} /></Field>
