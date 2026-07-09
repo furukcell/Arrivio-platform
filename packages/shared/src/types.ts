@@ -20,6 +20,7 @@ export type TicketStatus = (typeof TICKET_STATUSES)[number];
 export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
 export type QrSourceType = (typeof QR_SOURCE_TYPES)[number];
 export type TransferDirection = "from_airport" | "to_airport";
+export type TransferVehicleClass = "economic" | "vip" | "minibus" | "luxury";
 
 export interface AppUser {
   id?: string;
@@ -64,9 +65,27 @@ export interface TransferRequest extends BaseRequest {
   destination: string;
   passengers: number;
   bags?: number;
-  vehicleClass?: "economic" | "vip" | "minibus" | "luxury";
+  vehicleClass?: TransferVehicleClass;
+  estimatedPriceMin?: number;
+  estimatedPriceMax?: number;
+  matchedProviderCount?: number;
   pickupDate?: string;
   pickupTime?: string;
+}
+
+export interface TransferRoutePrice {
+  id?: string;
+  providerId: string;
+  airportCode: "BJV" | string;
+  transferDirection: TransferDirection;
+  destination: string;
+  vehicleClass: TransferVehicleClass;
+  price: number;
+  currency: "TRY" | "EUR" | "USD" | "GBP";
+  isActive: boolean;
+  isVerified?: boolean;
+  updatedAt?: unknown;
+  createdAt?: unknown;
 }
 
 export interface CarRentalRequest extends BaseRequest {
